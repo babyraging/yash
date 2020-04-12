@@ -1,0 +1,53 @@
+{
+    "name": "flex-bison-lang",
+    "displayName": "Flex & Bison Lang",
+    "description": "Syntax highlighting for flex and bison",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.44.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "flex",
+                "aliases": [
+                    "Flex",
+                    "flex"
+                ],
+                "extensions": [
+                    ".fl",
+                    ".l"
+                ],
+                "configuration": "./flex-configuration.json"
+            },
+            {
+                "id": "bison",
+                "aliases": [
+                    "Bison",
+                    "bison"
+                ],
+                "extensions": [
+                    ".y",
+                    ".yacc",
+                    ".ypp"
+                ],
+                "configuration": "./bison-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "flex",
+                "scopeName": "source.l",
+                "path": "./syntaxes/flex.tmLanguage.json"
+            },
+            {
+                "language": "bison",
+                "scopeName": "source.y",
+                "path": "./syntaxes/bison.tmLanguage.json"
+            }
+        ]
+    }
+}

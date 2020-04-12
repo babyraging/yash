@@ -1,0 +1,141 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Bison",
+	"patterns": [
+		{
+			"include": "#header"
+		},
+		{
+			"include": "#tags"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#variables"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#body"
+		}
+	],
+	"repository": {
+		"header": {
+			"name": "entity.bison",
+			"begin": "%{",
+			"end": "%}",
+			"patterns": [
+				{
+					"include": "source.c"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.other.bison",
+					"match": "^%(option|x)\\b"
+				},
+				{
+					"name": "variable.parameter",
+					"match": "\\b(outfile|header-file|noyywrap|yylineno)\\b"
+				}
+			]
+		},
+		"variables": {
+			"patterns": [
+				{
+					"name": "support.class.bison",
+					"match": "^[a-zA-Z_]+"
+				},
+				{
+					"name": "support.constant.bison",
+					"match": "<[a-zA-Z_]+>"
+				},
+				{
+					"name": "support.class.bison",
+					"match": "{[a-zA-Z_]+}"
+				}
+			]
+		},
+		"tags": {
+			"begin": "^%[sx]",
+			"end": "$",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.other.bison"
+				}
+			},
+			"patterns": [
+				{
+					"name": "support.constant.bison",
+					"match": "\\b[a-zA-Z_]+\\b"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.bison",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.bison",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.block.bison",
+			"begin": "/\\*",
+			"end": "\\*/"
+		},
+		"body": {
+			"begin": "%%",
+			"end": "%%",
+			"beginCaptures": {
+				"0": {
+					"name": "markup.bold.bison"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "markup.bold.bison"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#variables"
+				},
+				{
+					"patterns": [
+						{
+							"name": "string.unquoted",
+							"match": "^.*(?={)"
+						}
+					]
+				},
+				{
+					"begin": "{",
+					"end": "}",
+					"patterns": [
+						{
+							"include": "source.cpp"
+						},
+						{
+							"include": "source.c"
+						}
+					]
+				}
+			]
+		}
+	},
+	"scopeName": "source.y"
+}
