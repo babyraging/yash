@@ -69,7 +69,7 @@
 						{
 							"patterns": [
 								{
-									"name": "constant.flex",
+									"name": "support.constant.flex",
 									"match": "<[a-zA-Z_]+>"
 								}
 							]
@@ -87,10 +87,7 @@
 							"end": "}",
 							"patterns": [
 								{
-									"include": "source.cpp"
-								},
-								{
-									"include": "source.c"
+									"include": "#embedded"
 								}
 							]
 						},
@@ -105,7 +102,7 @@
 		"subroutine": {
 			"patterns": [
 				{
-					"include": "source.c"
+					"include": "#embedded"
 				}
 			]
 		},
@@ -128,7 +125,7 @@
 			},
 			"patterns": [
 				{
-					"include": "source.c"
+					"include": "#embedded"
 				}
 			]
 		},
@@ -215,6 +212,16 @@
 		"symbols": {
 			"name": "keyword.flex",
 			"match": "[\\|;]"
+		},
+		"embedded": {
+			"patterns": [
+				{
+					"include": "source.cpp"
+				},
+				{
+					"include": "source.c"
+				}
+			]
 		}
 	},
 	"scopeName": "source.l"
