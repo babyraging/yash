@@ -3,67 +3,154 @@
 	"name": "Flex",
 	"patterns": [
 		{
-			"include": "#header"
-		},
-		{
-			"include": "#tags"
-		},
-		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#variables"
-		},
-		{
 			"include": "#strings"
 		},
 		{
-			"include": "#comments"
+			"include": "#symbols"
 		},
 		{
-			"include": "#body"
+			"include": "#definition"
+		},
+		{
+			"include": "#rules"
+		},
+		{
+			"include": "#subroutine"
 		}
 	],
 	"repository": {
-		"header": {
-			"name": "entity.flex",
-			"begin": "%{",
-			"end": "%}",
+		"definition": {
+			"patterns": [
+				{
+					"include": "#block"
+				},
+				{
+					"include": "#directives"
+				},
+				{
+					"include": "#states"
+				},
+				{
+					"include": "#defines"
+				}
+			]
+		},
+		"rules": {
+			"patterns": [
+				{
+					"include": "#block"
+				},
+				{
+					"begin": "%%",
+					"end": "%%",
+					"beginCaptures": {
+						"0": {
+							"name": "markup.bold.flex"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "markup.bold.flex"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#strings"
+						},
+						{
+							"include": "#predefined"
+						},
+						{
+							"include": "#use-define"
+						},
+						{
+							"include": "#symbols"
+						},
+						{
+							"patterns": [
+								{
+									"name": "constant.flex",
+									"match": "<[a-zA-Z_]+>"
+								}
+							]
+						},
+						{
+							"patterns": [
+								{
+									"name": "string.unquoted",
+									"match": "^.*(?={)"
+								}
+							]
+						},
+						{
+							"begin": "{",
+							"end": "}",
+							"patterns": [
+								{
+									"include": "source.cpp"
+								},
+								{
+									"include": "source.c"
+								}
+							]
+						},
+						{
+							"name": "entity.name.function.flex",
+							"match": "."
+						}
+					]
+				}
+			]
+		},
+		"subroutine": {
 			"patterns": [
 				{
 					"include": "source.c"
 				}
 			]
 		},
-		"keywords": {
+		"block": {
+			"name": "entity.flex",
+			"begin": "%(top)?{",
+			"end": "%}",
+			"beginCaptures": {
+				"0": {
+					"name": "markup.inserted.flex"
+				},
+				"1": {
+					"name": "variable.parameter.flex"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "markup.inserted.flex"
+				}
+			},
 			"patterns": [
 				{
-					"name": "keyword.other.flex",
-					"match": "^%(option|x)\\b"
+					"include": "source.c"
+				}
+			]
+		},
+		"directives": {
+			"begin": "^%(array|pointer|option)",
+			"end": "$",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.other.flex"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#strings"
 				},
 				{
 					"name": "variable.parameter",
-					"match": "\\b(outfile|header-file|noyywrap|yylineno)\\b"
+					"match": "[a-zA-Z0-9-]+"
 				}
 			]
 		},
-		"variables": {
-			"patterns": [
-				{
-					"name": "support.class.flex",
-					"match": "^[a-zA-Z_]+"
-				},
-				{
-					"name": "support.constant.flex",
-					"match": "<[a-zA-Z_]+>"
-				},
-				{
-					"name": "support.class.flex",
-					"match": "{[a-zA-Z_]+}"
-				}
-			]
-		},
-		"tags": {
+		"states": {
 			"begin": "^%[sx]",
 			"end": "$",
 			"beginCaptures": {
@@ -74,9 +161,41 @@
 			"patterns": [
 				{
 					"name": "support.constant.flex",
-					"match": "\\b[a-zA-Z_]+\\b"
+					"match": "."
 				}
 			]
+		},
+		"defines": {
+			"begin": "^[a-zA-Z_]+",
+			"end": "$",
+			"beginCaptures": {
+				"0": {
+					"name": "support.class.flex"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#use-define"
+				},
+				{
+					"include": "#symbols"
+				},
+				{
+					"name": "entity.name.function.flex",
+					"match": "."
+				}
+			]
+		},
+		"use-define": {
+			"match": "{([a-zA-Z_]+)}",
+			"captures": {
+				"0": {
+					"name": "entity.name.function"
+				},
+				"1": {
+					"name": "support.class.flex"
+				}
+			}
 		},
 		"strings": {
 			"name": "string.quoted.double.flex",
@@ -89,52 +208,13 @@
 				}
 			]
 		},
-		"comments": {
-			"name": "comment.block.flex",
-			"begin": "/\\*",
-			"end": "\\*/"
+		"predefined": {
+			"name": "keyword.flex",
+			"match": "(<<EOF>>)"
 		},
-		"body": {
-			"begin": "%%",
-			"end": "%%",
-			"beginCaptures": {
-				"0": {
-					"name": "markup.bold.flex"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "markup.bold.flex"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#strings"
-				},
-				{
-					"include": "#variables"
-				},
-				{
-					"patterns": [
-						{
-							"name": "string.unquoted",
-							"match": "^.*(?={)"
-						}
-					]
-				},
-				{
-					"begin": "{",
-					"end": "}",
-					"patterns": [
-						{
-							"include": "source.cpp"
-						},
-						{
-							"include": "source.c"
-						}
-					]
-				}
-			]
+		"symbols": {
+			"name": "keyword.flex",
+			"match": "[\\|;]"
 		}
 	},
 	"scopeName": "source.l"
