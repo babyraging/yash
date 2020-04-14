@@ -61,7 +61,7 @@
 				},
 				{
 					"name": "keyword.other.bison",
-					"match": "%(empty)"
+					"match": "%(empty|prec)"
 				},
 				{
 					"begin": "{",
@@ -79,10 +79,6 @@
 					"patterns": [
 						{
 							"include": "#embedded"
-						},
-						{
-							"name": "keyword.operator",
-							"match": "(\\$\\$|\\$)"
 						}
 					]
 				},
@@ -218,7 +214,6 @@
 			]
 		},
 		"embedded": {
-			"scopeName":"pippo",
 			"patterns": [
 				{
 					"include": "source.cpp"
