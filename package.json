@@ -39,6 +39,13 @@
         ],
         "grammars": [
             {
+                "path": "./syntaxes/dollars.injection.json",
+                "scopeName": "dollars.injection",
+                "injectTo": [
+                    "source.y"
+                ]
+            },
+            {
                 "language": "flex",
                 "scopeName": "source.l",
                 "path": "./syntaxes/flex.tmLanguage.json"

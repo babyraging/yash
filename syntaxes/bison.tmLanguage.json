@@ -3,98 +3,36 @@
 	"name": "Bison",
 	"patterns": [
 		{
-			"include": "#header"
+			"include": "#declarations"
 		},
 		{
-			"include": "#tags"
+			"include": "#rules"
 		},
 		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#variables"
-		},
-		{
-			"include": "#strings"
-		},
-		{
-			"include": "#comments"
-		},
-		{
-			"include": "#body"
+			"include": "#epilogue"
 		}
 	],
 	"repository": {
-		"header": {
-			"name": "entity.bison",
-			"begin": "%{",
-			"end": "%}",
+		"declarations": {
 			"patterns": [
 				{
-					"include": "source.c"
-				}
-			]
-		},
-		"keywords": {
-			"patterns": [
-				{
-					"name": "keyword.other.bison",
-					"match": "^%(option|x)\\b"
+					"include": "#prologue"
 				},
 				{
-					"name": "variable.parameter",
-					"match": "\\b(outfile|header-file|noyywrap|yylineno)\\b"
-				}
-			]
-		},
-		"variables": {
-			"patterns": [
-				{
-					"name": "support.class.bison",
-					"match": "^[a-zA-Z_]+"
+					"include": "#comment"
 				},
 				{
-					"name": "support.constant.bison",
-					"match": "<[a-zA-Z_]+>"
+					"include": "#comments"
 				},
 				{
-					"name": "support.class.bison",
-					"match": "{[a-zA-Z_]+}"
-				}
-			]
-		},
-		"tags": {
-			"begin": "^%[sx]",
-			"end": "$",
-			"beginCaptures": {
-				"0": {
-					"name": "keyword.other.bison"
-				}
-			},
-			"patterns": [
+					"include": "#keywords"
+				},
 				{
-					"name": "support.constant.bison",
-					"match": "\\b[a-zA-Z_]+\\b"
+					"include": "#keywords-block"
 				}
 			]
 		},
-		"strings": {
-			"name": "string.quoted.double.bison",
-			"begin": "\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape.bison",
-					"match": "\\\\."
-				}
-			]
-		},
-		"comments": {
-			"name": "comment.block.bison",
-			"begin": "/\\*",
-			"end": "\\*/"
-		},
-		"body": {
+		"rules": {
 			"begin": "%%",
 			"end": "%%",
 			"beginCaptures": {
@@ -109,30 +47,184 @@
 			},
 			"patterns": [
 				{
-					"include": "#strings"
+					"include": "#results"
 				},
 				{
-					"include": "#variables"
+					"include": "#comments"
 				},
 				{
-					"patterns": [
-						{
-							"name": "string.unquoted",
-							"match": "^.*(?={)"
-						}
-					]
+					"include": "#character"
+				},
+				{
+					"name": "keyword.operator",
+					"match": "[\\|:;]"
+				},
+				{
+					"name": "keyword.other.bison",
+					"match": "%(empty)"
 				},
 				{
 					"begin": "{",
 					"end": "}",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.paren.open"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.paren.close"
+						}
+					},
 					"patterns": [
 						{
-							"include": "source.cpp"
+							"include": "#embedded"
 						},
 						{
-							"include": "source.c"
+							"name": "keyword.operator",
+							"match": "(\\$\\$|\\$)"
 						}
 					]
+				},
+				{
+					"name": "variable.parameter",
+					"match": "."
+				}
+			]
+		},
+		"keywords": {
+			"begin": "^%(option|type|token|left|right|defines|define|output)\\b",
+			"end": "$",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.other.bison"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#character"
+				},
+				{
+					"include": "#types"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"name": "variable.parameter",
+					"match": "."
+				}
+			]
+		},
+		"keywords-block": {
+			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer)",
+			"end": "}",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.other.bison"
+				}
+			},
+			"patterns": [
+				{
+					"begin": "{",
+					"end": "(?=})",
+					"patterns": [
+						{
+							"include": "#embedded"
+						}
+					]
+				}
+			]
+		},
+		"prologue": {
+			"name": "entity.bison",
+			"begin": "%(top)?{",
+			"end": "%}",
+			"beginCaptures": {
+				"0": {
+					"name": "markup.inserted.bison"
+				},
+				"1": {
+					"name": "variable.parameter.bison"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "markup.inserted.bison"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#embedded"
+				}
+			]
+		},
+		"types": {
+			"begin": "<",
+			"end": ">",
+			"patterns": [
+				{
+					"name": "support.type.bison",
+					"match": "[a-zA-Z_*\b]+"
+				}
+			]
+		},
+		"results": {
+			"patterns": [
+				{
+					"name": "support.class.bison",
+					"match": "^[a-zA-Z_]+"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.bison",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.bison",
+					"match": "\\\\."
+				}
+			]
+		},
+		"character": {
+			"patterns": [
+				{
+					"name": "string.quoted.single.bison",
+					"match": "'.'"
+				},
+				{
+					"name": "string.quoted.single.bison",
+					"match": "\"(\\\\)?.\""
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.block.bison",
+			"begin": "/\\*",
+			"end": "\\*/"
+		},
+		"comment": {
+			"name": "comment.single.bison",
+			"begin": "//",
+			"end": "$"
+		},
+		"epilogue": {
+			"patterns": [
+				{
+					"include": "#embedded"
+				}
+			]
+		},
+		"embedded": {
+			"scopeName":"pippo",
+			"patterns": [
+				{
+					"include": "source.cpp"
+				},
+				{
+					"include": "source.c"
 				}
 			]
 		}

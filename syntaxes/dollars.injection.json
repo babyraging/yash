@@ -1,0 +1,15 @@
+{
+	"scopeName": "dollars.injection",
+	"injectionSelector": "L:",
+	"patterns": [
+	  {
+		"include": "#dollars-keyword"
+	  }
+	],
+	"repository": {
+	  "dollars-keyword": {
+		"match": "\\$([0-9]*|(\\$))",
+		"name": "keyword.todo"
+	  }
+	}
+ }
