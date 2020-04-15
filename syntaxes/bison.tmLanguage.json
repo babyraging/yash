@@ -74,9 +74,9 @@
 					"match": "%(empty|prec)"
 				},
 				{
+					"name": "entity.action.bison",
 					"begin": "{",
 					"end": "}",
-					"name": "entity.action.bison",
 					"beginCaptures": {
 						"0": {
 							"name": "punctuation.paren.open"
@@ -245,7 +245,7 @@
 			"patterns": [
 				{
 					"name": "string.quoted.single.bison",
-					"match": "'.'"
+					"match": "'(\\\\)?.'"
 				},
 				{
 					"name": "string.quoted.single.bison",

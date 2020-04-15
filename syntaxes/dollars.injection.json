@@ -8,7 +8,7 @@
 	],
 	"repository": {
 	  "dollars-keyword": {
-		"match": "\\$((<[a-zA-Z_*\b]+>)?[0-9]*|(\\$))(?=[^$])",
+		"match": "\\$((<[a-zA-Z_*\b]+>)?[0-9]*|(\\$))(\\[[ +\\-*/a-zA-Z_0-9]+\\])?(?=[^$])",
 		"name": "keyword.todo"
 	  }
 	}
