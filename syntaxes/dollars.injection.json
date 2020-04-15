@@ -1,6 +1,6 @@
 {
 	"scopeName": "dollars.injection",
-	"injectionSelector": "L:",
+	"injectionSelector": "L:entity.action.bison",
 	"patterns": [
 	  {
 		"include": "#dollars-keyword"
@@ -8,7 +8,7 @@
 	],
 	"repository": {
 	  "dollars-keyword": {
-		"match": "\\$([0-9]*|(\\$))",
+		"match": "\\$((<[a-zA-Z_*\b]+>)?[0-9]*|(\\$))(?=[^$])",
 		"name": "keyword.todo"
 	  }
 	}

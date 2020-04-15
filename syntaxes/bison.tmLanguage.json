@@ -14,6 +14,9 @@
 	],
 	"repository": {
 		"declarations": {
+			"name": "entity.declarations.bison",
+			"begin": "(?=%{)",
+			"end": "(?=%%)",
 			"patterns": [
 				{
 					"include": "#prologue"
@@ -29,10 +32,14 @@
 				},
 				{
 					"include": "#keywords-block"
+				},
+				{
+					"include": "#define"
 				}
 			]
 		},
 		"rules": {
+			"name": "entity.rules.bison",
 			"begin": "%%",
 			"end": "%%",
 			"beginCaptures": {
@@ -56,6 +63,9 @@
 					"include": "#character"
 				},
 				{
+					"include": "#variables"
+				},
+				{
 					"name": "keyword.operator",
 					"match": "[\\|:;]"
 				},
@@ -66,6 +76,7 @@
 				{
 					"begin": "{",
 					"end": "}",
+					"name": "entity.action.bison",
 					"beginCaptures": {
 						"0": {
 							"name": "punctuation.paren.open"
@@ -81,15 +92,19 @@
 							"include": "#embedded"
 						}
 					]
-				},
+				}
+			]
+		},
+		"epilogue": {
+			"name": "entity.epilogue.bison",
+			"patterns": [
 				{
-					"name": "variable.parameter",
-					"match": "."
+					"include": "#embedded"
 				}
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|type|token|left|right|defines|define|output)\\b",
+			"begin": "^%(option|type|token|left|right|defines|output|nterm)\\b",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -98,7 +113,10 @@
 			},
 			"patterns": [
 				{
-					"include": "#character"
+					"include": "#number"
+				},
+				{
+					"include": "#variables"
 				},
 				{
 					"include": "#types"
@@ -107,8 +125,31 @@
 					"include": "#strings"
 				},
 				{
-					"name": "variable.parameter",
-					"match": "."
+					"include": "#character"
+				}
+			]
+		},
+		"define": {
+			"begin": "^%(define)",
+			"end": "$",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.other.bison"
+				}
+			},
+			"patterns": [
+				{
+					"name": "variable.parameter.bison",
+					"match": "[a-zA-Z_\\.]+"
+				},
+				{
+					"begin": "{",
+					"end": "}",
+					"patterns": [
+						{
+							"include": "#embedded"
+						}
+					]
 				}
 			]
 		},
@@ -133,7 +174,7 @@
 			]
 		},
 		"prologue": {
-			"name": "entity.bison",
+			"name": "entity.prologue.bison",
 			"begin": "%(top)?{",
 			"end": "%}",
 			"beginCaptures": {
@@ -155,6 +196,14 @@
 				}
 			]
 		},
+		"number":{
+			"patterns": [
+				{
+					"name": "constant.numeric.bison",
+					"match": "[0-9]+((x)[0-9]+)?"
+				}
+			]
+		},
 		"types": {
 			"begin": "<",
 			"end": ">",
@@ -162,6 +211,14 @@
 				{
 					"name": "support.type.bison",
 					"match": "[a-zA-Z_*\b]+"
+				}
+			]
+		},
+		"variables": {
+			"patterns": [
+				{
+					"name": "variable.parameter.bison",
+					"match": "[a-zA-Z_]+"
 				}
 			]
 		},
@@ -205,13 +262,6 @@
 			"name": "comment.single.bison",
 			"begin": "//",
 			"end": "$"
-		},
-		"epilogue": {
-			"patterns": [
-				{
-					"include": "#embedded"
-				}
-			]
 		},
 		"embedded": {
 			"patterns": [
