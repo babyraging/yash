@@ -66,7 +66,7 @@
 					"include": "#variables"
 				},
 				{
-					"name": "keyword.operator",
+					"name": "keyword.operator.bison",
 					"match": "[\\|:;]"
 				},
 				{
@@ -104,7 +104,7 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|type|token|left|right|defines|output|nterm)\\b",
+			"begin": "^%(option|type|token|left|right|defines|output|precedence|nterm)\\b",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -154,8 +154,8 @@
 			]
 		},
 		"keywords-block": {
-			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer)",
-			"end": "}",
+			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer|parse-param)",
+			"end": "$",
 			"beginCaptures": {
 				"0": {
 					"name": "keyword.other.bison"
@@ -163,13 +163,17 @@
 			},
 			"patterns": [
 				{
+					"name": "entity.action.bison",
 					"begin": "{",
-					"end": "(?=})",
+					"end": "}",
 					"patterns": [
 						{
 							"include": "#embedded"
 						}
 					]
+				},
+				{
+					"include": "#variables"
 				}
 			]
 		},
