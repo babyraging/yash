@@ -22,12 +22,12 @@ const legend = (function () {
 
 export function activate(context: vscode.ExtensionContext) {
 	const yacc = new YaccSemanticAnalyzer();
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('bison', yacc, '%'));
-	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('bison', yacc, legend));
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('yacc', yacc, '%'));
+	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('yacc', yacc, legend));
 
 	const lex = new LexSemanticAnalyzer();
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('flex', lex, '%', '{', '<'));
-	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('flex', lex, legend));
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('lex', lex, '%', '{', '<'));
+	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('lex', lex, legend));
 }
 
 interface IParsedToken {
@@ -94,7 +94,11 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 		if (position.line >= this.startingLine) {
 			return [];
 		}
-		return this.keywords.map((keyword) => new vscode.CompletionItem(keyword, vscode.CompletionItemKind.Constructor));
+		return this.keywords.map((keyword) => {
+			const completion = new vscode.CompletionItem(keyword, vscode.CompletionItemKind.Constructor);
+			completion.detail = "keyword";
+			return completion;
+		});
 	}
 
 
@@ -104,7 +108,7 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 }
 
 class YaccSemanticAnalyzer extends SemanticAnalyzer {
-	private results: Set<string> = new Set();
+	private symbols: Set<string> = new Set();
 	private tokens: Set<string> = new Set();
 	private types: Set<string> = new Set();
 
@@ -129,8 +133,10 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 		 */
 		if (line.match(/^%type\s*<.*>.*/)) {
 			var completions: vscode.CompletionItem[] = [];
-			this.results.forEach((result) => {
-				completions.push(new vscode.CompletionItem(result, vscode.CompletionItemKind.Class));
+			this.symbols.forEach((result) => {
+				const completion = new vscode.CompletionItem(result, vscode.CompletionItemKind.Class);
+				completion.detail = "symbol"
+				completions.push(completion);
 			})
 			return completions;
 		}
@@ -146,11 +152,16 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 			line = line.trim()
 			if (line.startsWith(':') || line.startsWith('|')) {
 				var completions: vscode.CompletionItem[] = [];
-				this.results.forEach((result) => {
-					completions.push(new vscode.CompletionItem(result, vscode.CompletionItemKind.Class));
+				var completion: vscode.CompletionItem;
+				this.symbols.forEach((symbol) => {
+					completion = new vscode.CompletionItem(symbol, vscode.CompletionItemKind.Class)
+					completion.detail = "symbol";
+					completions.push(completion);
 				})
 				this.tokens.forEach((token) => {
-					completions.push(new vscode.CompletionItem(token, vscode.CompletionItemKind.Field));
+					completion = new vscode.CompletionItem(token, vscode.CompletionItemKind.Field)
+					completion.detail = "token";
+					completions.push(completion);
 				})
 				return completions;
 			}
@@ -163,9 +174,12 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 			return [];
 		}
 
+		var completion: vscode.CompletionItem;
 		var completions: vscode.CompletionItem[] = [];
 		this.types.forEach((yyType) => {
-			completions.push(new vscode.CompletionItem(yyType, vscode.CompletionItemKind.TypeParameter));
+			completion = new vscode.CompletionItem(yyType, vscode.CompletionItemKind.TypeParameter)
+			completion.detail = "type"
+			completions.push(completion);
 		})
 		return completions;
 	}
@@ -173,7 +187,7 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 	protected _parseText(document: vscode.TextDocument): IParsedToken[] {
 		let text = document.getText();
 		this.tokens.clear();
-		this.results.clear();
+		this.symbols.clear();
 		this.invalidRegions = [];
 		let r: IParsedToken[] = [];
 		let lines = text.split(/\r\n|\r|\n/);
@@ -233,18 +247,18 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 		}
 
 		/**
-		 * Find all results
+		 * Find all symbols
 		 */
 		for (let i = 0; i < rules.length; i++) {
 			const ruleMatcher = /^[a-zA-Z0-9_]+/;
 			const rule = ruleMatcher.exec(rules[i]);
 			if (rule !== null) {
-				this.results.add(rule[0]);
+				this.symbols.add(rule[0]);
 			}
 		}
 
 		/**
-		 * Highlight results in rules section
+		 * Highlight symbols in rules section
 		 */
 		const matcher = /[a-zA-Z0-9_]+/g;
 		for (let i = 0; i < rules.length; i++) {
@@ -252,7 +266,7 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 			var match;
 			while ((match = matcher.exec(line)) != null) {
 				const word = match[0];
-				if (this.results.has(word)) {
+				if (this.symbols.has(word)) {
 					r.push({
 						line: this.startingLine + i,
 						startCharacter: match.index,
@@ -276,6 +290,7 @@ class LexSemanticAnalyzer extends SemanticAnalyzer {
 	}
 
 	protected _handleTrigger(document: vscode.TextDocument, position: vscode.Position, character: string | undefined): vscode.CompletionItem[] | vscode.CompletionList {
+		var completion: vscode.CompletionItem;
 		const completions: vscode.CompletionItem[] = [];
 		let line = document.lineAt(position).text.substr(0, position.character);
 		if (character === '%') {
@@ -284,12 +299,16 @@ class LexSemanticAnalyzer extends SemanticAnalyzer {
 		} else if (character === '{') {
 			if (line.charAt(position.character - 2) !== ' ')
 				this.defines.forEach((define) => {
-					completions.push(new vscode.CompletionItem(define, vscode.CompletionItemKind.Class));
+					completion = new vscode.CompletionItem(define, vscode.CompletionItemKind.Class);
+					completion.detail = "definition";
+					completions.push(completion);
 				})
 		} else if (character === '<' && position.line >= this.startingLine && position.line <= this.endingLine) {
 			if (line.match(/^</)) {
-				this.states.forEach((result) => {
-					completions.push(new vscode.CompletionItem(result, vscode.CompletionItemKind.Class));
+				this.states.forEach((state) => {
+					completion = new vscode.CompletionItem(state, vscode.CompletionItemKind.Class);
+					completion.detail = "initial state";
+					completions.push(completion);
 				})
 			}
 		}

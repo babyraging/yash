@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Bison",
+	"name": "Yacc",
 	"patterns": [
 		{
 			"include": "#declarations"
@@ -14,7 +14,7 @@
 	],
 	"repository": {
 		"declarations": {
-			"name": "entity.declarations.bison",
+			"name": "entity.declarations.yacc",
 			"patterns": [
 				{
 					"include": "#prologue"
@@ -40,17 +40,17 @@
 			]
 		},
 		"rules": {
-			"name": "entity.rules.bison",
+			"name": "entity.rules.yacc",
 			"begin": "%%",
 			"end": "%%",
 			"beginCaptures": {
 				"0": {
-					"name": "markup.bold.bison"
+					"name": "markup.bold.yacc"
 				}
 			},
 			"endCaptures": {
 				"0": {
-					"name": "markup.bold.bison"
+					"name": "markup.bold.yacc"
 				}
 			},
 			"patterns": [
@@ -67,15 +67,15 @@
 					"include": "#variables"
 				},
 				{
-					"name": "keyword.operator.bison",
+					"name": "keyword.operator.yacc",
 					"match": "[\\|:;]"
 				},
 				{
-					"name": "keyword.other.bison",
+					"name": "keyword.other.yacc",
 					"match": "%(empty|prec)"
 				},
 				{
-					"name": "entity.action.bison",
+					"name": "entity.action.yacc",
 					"begin": "{",
 					"end": "}",
 					"beginCaptures": {
@@ -97,7 +97,7 @@
 			]
 		},
 		"epilogue": {
-			"name": "entity.epilogue.bison",
+			"name": "entity.epilogue.yacc",
 			"patterns": [
 				{
 					"include": "#embedded"
@@ -109,7 +109,7 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "keyword.other.bison"
+					"name": "keyword.other.yacc"
 				}
 			},
 			"patterns": [
@@ -135,7 +135,7 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "keyword.other.bison"
+					"name": "keyword.other.yacc"
 				}
 			},
 			"patterns": [
@@ -143,7 +143,7 @@
 					"include": "#types"
 				},
 				{
-					"name": "support.class.bison",
+					"name": "support.class.yacc",
 					"match": "[a-zA-Z0-9_]+"
 				}
 			]
@@ -153,12 +153,12 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "keyword.other.bison"
+					"name": "keyword.other.yacc"
 				}
 			},
 			"patterns": [
 				{
-					"name": "variable.parameter.bison",
+					"name": "variable.parameter.yacc",
 					"match": "[a-zA-Z_\\.]+"
 				},
 				{
@@ -177,12 +177,12 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "keyword.other.bison"
+					"name": "keyword.other.yacc"
 				}
 			},
 			"patterns": [
 				{
-					"name": "entity.action.bison",
+					"name": "entity.action.yacc",
 					"begin": "{",
 					"end": "}",
 					"patterns": [
@@ -197,20 +197,20 @@
 			]
 		},
 		"prologue": {
-			"name": "entity.prologue.bison",
+			"name": "entity.prologue.yacc",
 			"begin": "%(top)?{",
 			"end": "%}",
 			"beginCaptures": {
 				"0": {
-					"name": "markup.inserted.bison"
+					"name": "markup.inserted.yacc"
 				},
 				"1": {
-					"name": "variable.parameter.bison"
+					"name": "variable.parameter.yacc"
 				}
 			},
 			"endCaptures": {
 				"0": {
-					"name": "markup.inserted.bison"
+					"name": "markup.inserted.yacc"
 				}
 			},
 			"patterns": [
@@ -222,7 +222,7 @@
 		"number": {
 			"patterns": [
 				{
-					"name": "constant.numeric.bison",
+					"name": "constant.numeric.yacc",
 					"match": "[0-9]+((x)[0-9]+)?"
 				}
 			]
@@ -231,14 +231,14 @@
 			"match": "<([a-zA-Z_*\b]+)>",
 			"captures": {
 				"1": {
-					"name": "constant.numeric.bison"
+					"name": "constant.numeric.yacc"
 				}
 			}
 		},
 		"variables": {
 			"patterns": [
 				{
-					"name": "variable.parameter.bison",
+					"name": "variable.parameter.yacc",
 					"match": "[a-zA-Z_]+"
 				}
 			]
@@ -246,18 +246,18 @@
 		"results": {
 			"patterns": [
 				{
-					"name": "support.class.bison",
+					"name": "support.class.yacc",
 					"match": "^[a-zA-Z_]+"
 				}
 			]
 		},
 		"strings": {
-			"name": "string.quoted.double.bison",
+			"name": "string.quoted.double.yacc",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.bison",
+					"name": "constant.character.escape.yacc",
 					"match": "\\\\."
 				}
 			]
@@ -265,22 +265,22 @@
 		"character": {
 			"patterns": [
 				{
-					"name": "string.quoted.single.bison",
+					"name": "string.quoted.single.yacc",
 					"match": "'(\\\\)?.'"
 				},
 				{
-					"name": "string.quoted.single.bison",
+					"name": "string.quoted.single.yacc",
 					"match": "\"(\\\\)?.\""
 				}
 			]
 		},
 		"comments": {
-			"name": "comment.block.bison",
+			"name": "comment.block.yacc",
 			"begin": "/\\*",
 			"end": "\\*/"
 		},
 		"comment": {
-			"name": "comment.single.bison",
+			"name": "comment.single.yacc",
 			"begin": "//",
 			"end": "$"
 		},

@@ -1,7 +1,7 @@
 {
-    "name": "flex-bison-lang",
-    "displayName": "Flex & Bison Lang",
-    "description": "Syntax highlighting for flex and bison",
+    "name": "lex-yacc-lang",
+    "displayName": "lex/yacc & flex/bison Lang",
+    "description": "Language support for lex/yacc & flex/bison",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.44.0"
@@ -10,15 +10,17 @@
         "Programming Languages"
     ],
     "activationEvents": [
-        "onLanguage:bison",
-        "onLanguage:flex"
+        "onLanguage:yacc",
+        "onLanguage:lex"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "languages": [
             {
-                "id": "flex",
+                "id": "lex",
                 "aliases": [
+                    "Lex",
+                    "lex",
                     "Flex",
                     "flex"
                 ],
@@ -26,20 +28,21 @@
                     ".fl",
                     ".l"
                 ],
-                "configuration": "./flex-configuration.json"
+                "configuration": "./lex-configuration.json"
             },
             {
-                "id": "bison",
+                "id": "yacc",
                 "aliases": [
+                    "Yacc",
+                    "yacc",
                     "Bison",
                     "bison"
                 ],
                 "extensions": [
                     ".y",
-                    ".yacc",
-                    ".ypp"
+                    ".yacc"
                 ],
-                "configuration": "./bison-configuration.json"
+                "configuration": "./yacc-configuration.json"
             }
         ],
         "grammars": [
@@ -51,14 +54,14 @@
                 ]
             },
             {
-                "language": "flex",
+                "language": "lex",
                 "scopeName": "source.l",
-                "path": "./syntaxes/flex.tmLanguage.json"
+                "path": "./syntaxes/lex.tmLanguage.json"
             },
             {
-                "language": "bison",
+                "language": "yacc",
                 "scopeName": "source.y",
-                "path": "./syntaxes/bison.tmLanguage.json"
+                "path": "./syntaxes/yacc.tmLanguage.json"
             }
         ]
     },

@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Flex",
+	"name": "Lex",
 	"patterns": [
 		{
 			"include": "#strings"
@@ -42,12 +42,12 @@
 					"end": "%%",
 					"beginCaptures": {
 						"0": {
-							"name": "markup.bold.flex"
+							"name": "markup.bold.lex"
 						}
 					},
 					"endCaptures": {
 						"0": {
-							"name": "markup.bold.flex"
+							"name": "markup.bold.lex"
 						}
 					},
 					"patterns": [
@@ -76,7 +76,7 @@
 							"include": "#symbols"
 						},
 						{
-							"name": "constant.numeric.flex",
+							"name": "constant.numeric.lex",
 							"match": "<[a-zA-Z0-9_]+>"
 						},
 						{
@@ -84,7 +84,7 @@
 							"match": "^.*(?={)"
 						},
 						{
-							"name": "entity.name.function.flex",
+							"name": "entity.name.function.lex",
 							"match": "."
 						}
 					]
@@ -99,20 +99,20 @@
 			]
 		},
 		"block": {
-			"name": "entity.flex",
+			"name": "entity.lex",
 			"begin": "%(top)?{",
 			"end": "%}",
 			"beginCaptures": {
 				"0": {
-					"name": "markup.inserted.flex"
+					"name": "markup.inserted.lex"
 				},
 				"1": {
-					"name": "variable.parameter.flex"
+					"name": "variable.parameter.lex"
 				}
 			},
 			"endCaptures": {
 				"0": {
-					"name": "markup.inserted.flex"
+					"name": "markup.inserted.lex"
 				}
 			},
 			"patterns": [
@@ -126,7 +126,7 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "keyword.other.flex"
+					"name": "keyword.other.lex"
 				}
 			},
 			"patterns": [
@@ -144,12 +144,12 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "keyword.other.flex"
+					"name": "keyword.other.lex"
 				}
 			},
 			"patterns": [
 				{
-					"name": "constant.numeric.flex",
+					"name": "constant.numeric.lex",
 					"match": "."
 				}
 			]
@@ -159,7 +159,7 @@
 			"end": "$",
 			"beginCaptures": {
 				"0": {
-					"name": "support.class.flex"
+					"name": "support.class.lex"
 				}
 			},
 			"patterns": [
@@ -170,7 +170,7 @@
 					"include": "#symbols"
 				},
 				{
-					"name": "entity.name.function.flex",
+					"name": "entity.name.function.lex",
 					"match": "."
 				}
 			]
@@ -182,27 +182,27 @@
 					"name": "entity.name.function"
 				},
 				"1": {
-					"name": "support.class.flex"
+					"name": "support.class.lex"
 				}
 			}
 		},
 		"strings": {
-			"name": "string.quoted.double.flex",
+			"name": "string.quoted.double.lex",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.flex",
+					"name": "constant.character.escape.lex",
 					"match": "\\\\."
 				}
 			]
 		},
 		"predefined": {
-			"name": "keyword.flex",
+			"name": "keyword.lex",
 			"match": "(<<EOF>>)"
 		},
 		"symbols": {
-			"name": "keyword.flex",
+			"name": "keyword.lex",
 			"match": "[\\|;]"
 		},
 		"embedded": {

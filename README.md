@@ -1,6 +1,6 @@
-# flex-lang README
+# lex-lang README
 
-This is the README for your extension "flex-lang". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "lex-lang". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 

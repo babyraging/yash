@@ -1,6 +1,6 @@
 {
 	"scopeName": "dollars.injection",
-	"injectionSelector": "L:entity.action.bison",
+	"injectionSelector": "L:entity.action.yacc",
 	"patterns": [
 	  {
 		"include": "#dollars-keyword"
