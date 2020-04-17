@@ -24,8 +24,7 @@ const keywords =
 	['type', 'option', 'token', 'left', 'right', 'define', 'output', 'precedence', 'nterm', 'destructor', 'union', 'code', 'printer', 'parse-param', 'lex-param'];
 
 export function activate(context: vscode.ExtensionContext) {
-	const provider = new DocumentSemanticTokensProvider();
-	// context.subscriptions.push(vscode.languages.registerCompletionItemProvider('bison', provider));
+	const provider = new DocumentSemanticAnalyzer();
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('bison', provider, '%'));
 	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('bison', provider, legend));
 }
@@ -38,7 +37,7 @@ interface IParsedToken {
 	tokenModifiers: string[];
 }
 
-class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider, vscode.CompletionItemProvider {
+class DocumentSemanticAnalyzer implements vscode.DocumentSemanticTokensProvider, vscode.CompletionItemProvider {
 	private results: Set<string> = new Set();
 	private tokens: Set<string> = new Set();
 	private types: Set<string> = new Set();
@@ -84,14 +83,17 @@ class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensPro
 		 * Token and result suggestion only inside the rules section
 		 */
 		if (position.line >= this.startingLine && position.line <= this.endingLine) {
-			var completions: vscode.CompletionItem[] = [];
-			this.results.forEach((result) => {
-				completions.push(new vscode.CompletionItem(result, vscode.CompletionItemKind.Class));
-			})
-			this.tokens.forEach((token) => {
-				completions.push(new vscode.CompletionItem(token, vscode.CompletionItemKind.Field));
-			})
-			return completions;
+			line = line.trim()
+			if (line.startsWith(':') || line.startsWith('|')) {
+				var completions: vscode.CompletionItem[] = [];
+				this.results.forEach((result) => {
+					completions.push(new vscode.CompletionItem(result, vscode.CompletionItemKind.Class));
+				})
+				this.tokens.forEach((token) => {
+					completions.push(new vscode.CompletionItem(token, vscode.CompletionItemKind.Field));
+				})
+				return completions;
+			}
 		}
 
 		return [];
