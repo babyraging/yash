@@ -28,6 +28,9 @@
 					"include": "#comments"
 				},
 				{
+					"include": "#result-type"
+				},
+				{
 					"include": "#keywords"
 				},
 				{
@@ -104,7 +107,7 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|type|token|left|right|defines|output|precedence|nterm)\\b",
+			"begin": "^%(option|token|left|right|defines|output|precedence|nterm)\\b",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -126,6 +129,24 @@
 				},
 				{
 					"include": "#character"
+				}
+			]
+		},
+		"result-type": {
+			"begin": "^%type\\b",
+			"end": "$",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.other.bison"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#types"
+				},
+				{
+					"name": "support.class.bison",
+					"match": "[a-zA-Z0-9_]+"
 				}
 			]
 		},
@@ -200,7 +221,7 @@
 				}
 			]
 		},
-		"number":{
+		"number": {
 			"patterns": [
 				{
 					"name": "constant.numeric.bison",
@@ -209,14 +230,12 @@
 			]
 		},
 		"types": {
-			"begin": "<",
-			"end": ">",
-			"patterns": [
-				{
-					"name": "support.type.bison",
-					"match": "[a-zA-Z_*\b]+"
+			"match": "<([a-zA-Z_*\b]+)>",
+			"captures": {
+				"1": {
+					"name": "constant.numeric.bison"
 				}
-			]
+			}
 		},
 		"variables": {
 			"patterns": [

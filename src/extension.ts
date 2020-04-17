@@ -1,0 +1,113 @@
+import * as vscode from 'vscode';
+
+const tokenTypes = new Map<string, number>();
+const tokenModifiers = new Map<string, number>();
+
+const legend = (function () {
+	const tokenTypesLegend = [
+		'comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
+		'type', 'struct', 'class', 'interface', 'enum', 'typeParameter', 'function',
+		'member', 'macro', 'variable', 'parameter', 'property', 'label'
+	];
+	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
+
+	const tokenModifiersLegend = [
+		'declaration', 'documentation', 'readonly', 'static', 'abstract', 'deprecated',
+		'modification', 'async'
+	];
+	tokenModifiersLegend.forEach((tokenModifier, index) => tokenModifiers.set(tokenModifier, index));
+
+	return new vscode.SemanticTokensLegend(tokenTypesLegend, tokenModifiersLegend);
+})();
+
+export function activate(context: vscode.ExtensionContext) {
+	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: 'bison' }, new DocumentSemanticTokensProvider(), legend));
+}
+
+interface IParsedToken {
+	line: number;
+	startCharacter: number;
+	length: number;
+	tokenType: string;
+	tokenModifiers: string[];
+}
+
+class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
+
+	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
+		const allTokens = this._parseText(document.getText());
+		const builder = new vscode.SemanticTokensBuilder();
+		allTokens.forEach((token) => {
+			builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.tokenType), this._encodeTokenModifiers(token.tokenModifiers));
+		});
+		return builder.build();
+	}
+
+	private _encodeTokenType(tokenType: string): number {
+		if (!tokenTypes.has(tokenType)) {
+			return 0;
+		}
+		return tokenTypes.get(tokenType)!;
+	}
+
+	private _encodeTokenModifiers(strTokenModifiers: string[]): number {
+		let result = 0;
+		for (let i = 0; i < strTokenModifiers.length; i++) {
+			const tokenModifier = strTokenModifiers[i];
+			if (tokenModifiers.has(tokenModifier)) {
+				result = result | (1 << tokenModifiers.get(tokenModifier)!);
+			}
+		}
+		return result;
+	}
+
+	private _parseText(text: string): IParsedToken[] {
+		let types = new Set();
+		let r: IParsedToken[] = [];
+		let lines = text.split(/\r\n|\r|\n/);
+		let rules: string[] = [];
+		var startingLine = -1;
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (!line.startsWith('%%')) {
+				if (startingLine !== -1) {
+					const filtered = line.replace(/{.*}/, "");
+					rules.push(filtered);
+				}
+				continue;
+			} else {
+				if (startingLine === -1) {
+					startingLine = i;
+				}
+			}
+		}
+
+		startingLine++;
+		for (let i = 0; i < rules.length; i++) {
+			const ruleMatcher = /^[a-zA-Z0-9_]+/;
+			const rule = ruleMatcher.exec(rules[i]);
+			if (rule !== null) {
+				types.add(rule[0]);
+			}
+		}
+
+		const matcher = /[a-zA-Z0-9_]+/g;
+		for (let i = 0; i < rules.length; i++) {
+			const line = rules[i];
+			var match;
+			while ((match = matcher.exec(line)) != null) {
+				const word = match[0];
+				if (types.has(word)) {
+					r.push({
+						line: startingLine + i,
+						startCharacter: match.index,
+						length: word.length,
+						tokenType: "class",
+						tokenModifiers: []
+					});
+				}
+			}
+		}
+		return r;
+	}
+}

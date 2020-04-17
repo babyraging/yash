@@ -9,6 +9,10 @@
     "categories": [
         "Programming Languages"
     ],
+    "activationEvents": [
+        "onLanguage:bison"
+    ],
+    "main": "./out/extension.js",
     "contributes": {
         "languages": [
             {
@@ -56,5 +60,17 @@
                 "path": "./syntaxes/bison.tmLanguage.json"
             }
         ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "lint": "tslint -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.0",
+        "@types/vscode": "^1.44.0",
+        "tslint": "^5.19.0",
+        "typescript": "^3.8.3"
     }
 }
