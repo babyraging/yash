@@ -15,8 +15,6 @@
 	"repository": {
 		"declarations": {
 			"name": "entity.declarations.bison",
-			"begin": "(?=%{)",
-			"end": "(?=%%)",
 			"patterns": [
 				{
 					"include": "#prologue"
@@ -175,7 +173,7 @@
 			]
 		},
 		"keywords-block": {
-			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer|parse-param)",
+			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer|parse-param|lex-param)",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
