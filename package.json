@@ -10,7 +10,8 @@
         "Programming Languages"
     ],
     "activationEvents": [
-        "onLanguage:bison"
+        "onLanguage:bison",
+        "onLanguage:flex"
     ],
     "main": "./out/extension.js",
     "contributes": {

@@ -38,9 +38,6 @@
 		"rules": {
 			"patterns": [
 				{
-					"include": "#block"
-				},
-				{
 					"begin": "%%",
 					"end": "%%",
 					"beginCaptures": {
@@ -58,38 +55,33 @@
 							"include": "#strings"
 						},
 						{
+							"include": "#block"
+						},
+						{
 							"include": "#predefined"
 						},
 						{
-							"include": "#use-define"
-						},
-						{
-							"include": "#symbols"
-						},
-						{
-							"patterns": [
-								{
-									"name": "support.constant.flex",
-									"match": "<[a-zA-Z_]+>"
-								}
-							]
-						},
-						{
-							"patterns": [
-								{
-									"name": "string.unquoted",
-									"match": "^.*(?={)"
-								}
-							]
-						},
-						{
-							"begin": "{",
+							"begin": " {",
 							"end": "}",
 							"patterns": [
 								{
 									"include": "#embedded"
 								}
 							]
+						},
+						{
+							"include": "#user-define"
+						},
+						{
+							"include": "#symbols"
+						},
+						{
+							"name": "constant.numeric.flex",
+							"match": "<[a-zA-Z0-9_]+>"
+						},
+						{
+							"name": "string.unquoted",
+							"match": "^.*(?={)"
 						},
 						{
 							"name": "entity.name.function.flex",
@@ -157,13 +149,13 @@
 			},
 			"patterns": [
 				{
-					"name": "support.constant.flex",
+					"name": "constant.numeric.flex",
 					"match": "."
 				}
 			]
 		},
 		"defines": {
-			"begin": "^[a-zA-Z_]+",
+			"begin": "^[a-zA-Z0-9_]+",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -172,7 +164,7 @@
 			},
 			"patterns": [
 				{
-					"include": "#use-define"
+					"include": "#user-define"
 				},
 				{
 					"include": "#symbols"
@@ -183,8 +175,8 @@
 				}
 			]
 		},
-		"use-define": {
-			"match": "{([a-zA-Z_]+)}",
+		"user-define": {
+			"match": "{([a-zA-Z0-9_]+)}",
 			"captures": {
 				"0": {
 					"name": "entity.name.function"
