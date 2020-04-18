@@ -118,6 +118,7 @@ dist
 
 .vscode/*
 !.vscode/launch.json
+!.vscode/tasks.json
 out/
 
 *.fl
