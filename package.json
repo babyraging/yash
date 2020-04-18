@@ -1,11 +1,13 @@
 {
-    "name": "lex-yacc-lang",
-    "displayName": "lex/yacc & flex/bison Lang",
-    "description": "Language support for lex/yacc & flex/bison",
+    "name": "yash",
+    "displayName": "Yash",
+    "description": "Yet another syntax highlighter for lex/yacc & flex/bison.",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.44.0"
     },
+    "publisher": "daohong-emilio",
+    "icon": "assets/logo.png",
     "categories": [
         "Programming Languages"
     ],
