@@ -1,5 +1,10 @@
 # What's New?
 
+## 0.0.4
+### Changed
+- Removed gif samples from assets folder
+- Exclude gifs from extension package
+- 
 ## 0.0.3 
 ### Added
 - Updated README.md, added examples
