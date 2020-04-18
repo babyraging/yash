@@ -22,7 +22,7 @@ const legend = (function () {
 
 export function activate(context: vscode.ExtensionContext) {
 	const yacc = new YaccSemanticAnalyzer();
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('yacc', yacc, '%'));
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('yacc', yacc, '%', '<'));
 	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('yacc', yacc, legend));
 
 	const lex = new LexSemanticAnalyzer();
@@ -121,6 +121,10 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 		if (character === '%') {
 			if (line.startsWith('%'))
 				return this._keywordCompletions(document, position);
+		} else if (character === '<') {
+			if (line.match(/^%(?:type|token)\s*<.*/)) {
+				return this._typeParamCompletions(document, position);
+			}
 		}
 
 		return [];
@@ -131,7 +135,7 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 		/**
 		 * Result suggestion on defining type
 		 */
-		if (line.match(/^%type\s*<.*>.*/)) {
+		if (line.match(/^%type\s*<.*>.*$/)) {
 			var completions: vscode.CompletionItem[] = [];
 			this.symbols.forEach((result) => {
 				const completion = new vscode.CompletionItem(result, vscode.CompletionItemKind.Class);
@@ -141,7 +145,7 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 			return completions;
 		}
 
-		if (line.match(/^%(?:type|token)\s*<.*/)) {
+		if (line.match(/^%(?:type|token)\s*<[^>\n]+$/)) {
 			return this._typeParamCompletions(document, position);
 		}
 
@@ -297,7 +301,7 @@ class LexSemanticAnalyzer extends SemanticAnalyzer {
 			if (line.startsWith('%'))
 				return this._keywordCompletions(document, position);
 		} else if (character === '{') {
-			if (line.charAt(position.character - 2) !== ' ')
+			if (position.line < this.startingLine || line.charAt(position.character - 2) !== ' ')
 				this.defines.forEach((define) => {
 					completion = new vscode.CompletionItem(define, vscode.CompletionItemKind.Class);
 					completion.detail = "definition";
