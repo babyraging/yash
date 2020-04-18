@@ -2,13 +2,17 @@
     "name": "yash",
     "displayName": "Yash",
     "description": "Yet another syntax highlighter for lex/yacc & flex/bison.",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.44.0"
     },
     "preview": true,
     "publisher": "daohong-emilio",
-    "icon": "assets/logo.128x128.png",
+    "icon": "assets/logo.png",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/babyraging/yash.git"
+    },
     "categories": [
         "Programming Languages"
     ],
