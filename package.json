@@ -6,8 +6,9 @@
     "engines": {
         "vscode": "^1.44.0"
     },
+    "preview": true,
     "publisher": "daohong-emilio",
-    "icon": "assets/logo.png",
+    "icon": "assets/logo.128x128.png",
     "categories": [
         "Programming Languages"
     ],

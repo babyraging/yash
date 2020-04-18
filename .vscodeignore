@@ -1,3 +1,4 @@
 **/*.ts
 **/tsconfig.json
 **/tslint.json
+examples/

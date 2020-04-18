@@ -116,10 +116,12 @@ dist
 
 # VSCode things
 
+.DS_Store
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json
 out/
+*.vsix
 
 *.fl
 *.l
