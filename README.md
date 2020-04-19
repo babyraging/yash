@@ -22,27 +22,32 @@ Here is the comparison with and without semantic highlighting.
 
 On left enabled, on right disabled
 
-![](assets/semantic_comparison.png)
+![](https://github.com/babyraging/yash/blob/master/images/semantic_comparison.png)
 
 ### Completion features
 
 ### Auto-Completion for keywords, declared definitions in lex/flex
 
-![](images/lex_define.gif)
+![](https://github.com/babyraging/yash/blob/master/images/lex_define.gif)
 
-![](images/lex_rule.gif)
+![](https://github.com/babyraging/yash/blob/master/images/lex_rule.gif)
 
 ### Auto-Completion for keywords, declared union types in yacc/bison
 
-![](images/yacc_token.gif)
+![](https://github.com/babyraging/yash/blob/master/images/yacc_token.gif)
 
 
 ### Auto-Completion for symbols in yacc/bison
-![](images/yacc_symbol.gif)
+![](https://github.com/babyraging/yash/blob/master/images/yacc_symbol.gif)
 
 ### Auto-Completion for symbol type in yacc/bison
-![](images/yacc_type.gif)
+![](https://github.com/babyraging/yash/blob/master/images/yacc_type.gif)
 
 ## Requirements
 
 VSCode 1.44.0+
+
+## Contributors
+
+- [@babyraging](https://github.com/babyraging) - creator
+- [@sceriffo](https://github.com/Sceriffo) - creator 
