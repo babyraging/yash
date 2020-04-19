@@ -52,6 +52,9 @@
 					},
 					"patterns": [
 						{
+							"include": "#comments"
+						},
+						{
 							"include": "#strings"
 						},
 						{
@@ -214,6 +217,11 @@
 					"include": "source.c"
 				}
 			]
+		},
+		"comments": {
+			"name": "comment.block.yacc",
+			"begin": "/\\*",
+			"end": "\\*/"
 		}
 	},
 	"scopeName": "source.l"

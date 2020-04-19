@@ -21,13 +21,17 @@ const legend = (function () {
 })();
 
 export function activate(context: vscode.ExtensionContext) {
-	const yacc = new YaccSemanticAnalyzer();
+	const yacc = new YaccSemanticProvider();
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('yacc', yacc, '%', '<'));
 	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('yacc', yacc, legend));
+	context.subscriptions.push(vscode.languages.registerHoverProvider('yacc', yacc));
+	context.subscriptions.push(vscode.languages.registerDefinitionProvider('yacc', yacc));
 
-	const lex = new LexSemanticAnalyzer();
+	const lex = new LexSemanticProvider();
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider('lex', lex, '%', '{', '<'));
 	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider('lex', lex, legend));
+	context.subscriptions.push(vscode.languages.registerHoverProvider('lex', lex));
+	context.subscriptions.push(vscode.languages.registerDefinitionProvider('lex', lex));
 }
 
 interface IParsedToken {
@@ -38,7 +42,7 @@ interface IParsedToken {
 	tokenModifiers: string[];
 }
 
-abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider, vscode.CompletionItemProvider {
+abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider, vscode.CompletionItemProvider, vscode.HoverProvider, vscode.DefinitionProvider {
 	protected keywords: string[];
 	protected invalidRegions: vscode.Range[] = [];
 	protected startingLine = -1;
@@ -46,6 +50,28 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 
 	constructor(keywords: string[]) {
 		this.keywords = keywords;
+	}
+
+	async provideDefinition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Location | vscode.Location[] | vscode.LocationLink[]> {
+		for (let i = 0; i < this.invalidRegions.length; i++) {
+			const range = this.invalidRegions[i];
+			if (range.contains(position)) {
+				return [];
+			}
+		}
+
+		return this._provideDefinition(document, position);
+	}
+
+	async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover> {
+		for (let i = 0; i < this.invalidRegions.length; i++) {
+			const range = this.invalidRegions[i];
+			if (range.contains(position)) {
+				return { contents: [] };
+			}
+		}
+
+		return this._provideHover(document, position);
 	}
 
 	async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): Promise<vscode.CompletionItem[] | vscode.CompletionList> {
@@ -102,18 +128,59 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 	}
 
 
+	protected abstract _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[];
+	protected abstract _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover;
+
 	protected abstract _handleTrigger(document: vscode.TextDocument, position: vscode.Position, character: string | undefined): vscode.CompletionItem[] | vscode.CompletionList;
 	protected abstract _rulesCompletion(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | vscode.CompletionList;
 	protected abstract _parseText(document: vscode.TextDocument): IParsedToken[];
 }
 
-class YaccSemanticAnalyzer extends SemanticAnalyzer {
-	private symbols: Set<string> = new Set();
-	private tokens: Set<string> = new Set();
-	private types: Set<string> = new Set();
+class YaccSemanticProvider extends SemanticAnalyzer {
+	private symbols: Map<string, vscode.Position> = new Map();
+	private tokens: Map<string, vscode.Position> = new Map();
+	private types: Map<string, vscode.Position> = new Map();
 
 	constructor() {
 		super(['type', 'option', 'token', 'left', 'right', 'define', 'output', 'precedence', 'nterm', 'destructor', 'union', 'code', 'printer', 'parse-param', 'lex-param']);
+	}
+
+	protected _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[] {
+		const word = document.getText(document.getWordRangeAtPosition(position));
+
+		if (this.symbols.has(word)) {
+			const pos = this.symbols.get(word)!;
+			return new vscode.Location(document.uri, pos);
+		}
+
+		if (this.tokens.has(word)) {
+			const pos = this.tokens.get(word)!;
+			return new vscode.Location(document.uri, pos);
+		}
+
+		if (this.types.has(word)) {
+			const pos = this.types.get(word)!;
+			return new vscode.Location(document.uri, pos);
+		}
+
+		return [];
+	}
+
+	protected _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover {
+		const word = document.getText(document.getWordRangeAtPosition(position));
+		if (this.symbols.has(word)) {
+			return { contents: ['symbol'] }
+		}
+
+		if (this.tokens.has(word)) {
+			return { contents: ['token'] }
+		}
+
+		if (this.types.has(word)) {
+			return { contents: ['type'] }
+		}
+
+		return { contents: [] };
 	}
 
 	protected _handleTrigger(document: vscode.TextDocument, position: vscode.Position, character: string | undefined): vscode.CompletionItem[] | vscode.CompletionList {
@@ -137,8 +204,8 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 		 */
 		if (line.match(/^%type\s*<.*>.*$/)) {
 			var completions: vscode.CompletionItem[] = [];
-			this.symbols.forEach((result) => {
-				const completion = new vscode.CompletionItem(result, vscode.CompletionItemKind.Class);
+			this.symbols.forEach((value, key) => {
+				const completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
 				completion.detail = "symbol"
 				completions.push(completion);
 			})
@@ -153,17 +220,16 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 		 * Token and result suggestion only inside the rules section
 		 */
 		if (position.line >= this.startingLine && position.line <= this.endingLine) {
-			line = line.trim()
-			if (line.startsWith(':') || line.startsWith('|')) {
+			if (line.indexOf('|') !== -1 || line.indexOf(':') !== -1) {
 				var completions: vscode.CompletionItem[] = [];
 				var completion: vscode.CompletionItem;
-				this.symbols.forEach((symbol) => {
-					completion = new vscode.CompletionItem(symbol, vscode.CompletionItemKind.Class)
+				this.symbols.forEach((value, key) => {
+					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class)
 					completion.detail = "symbol";
 					completions.push(completion);
 				})
-				this.tokens.forEach((token) => {
-					completion = new vscode.CompletionItem(token, vscode.CompletionItemKind.Field)
+				this.tokens.forEach((value, key) => {
+					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Field)
 					completion.detail = "token";
 					completions.push(completion);
 				})
@@ -180,8 +246,8 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 
 		var completion: vscode.CompletionItem;
 		var completions: vscode.CompletionItem[] = [];
-		this.types.forEach((yyType) => {
-			completion = new vscode.CompletionItem(yyType, vscode.CompletionItemKind.TypeParameter)
+		this.types.forEach((value, key) => {
+			completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.TypeParameter)
 			completion.detail = "type"
 			completions.push(completion);
 		})
@@ -213,7 +279,8 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 			const typeMatcher = /([a-zA-Z0-9_]*)\s*;/g
 			var res;
 			while ((res = typeMatcher.exec(yyType[1])) !== null) {
-				this.types.add(res[1]);
+				const position = document.positionAt(yyType.index + res.index);
+				this.types.set(res[1], position);
 			}
 		}
 
@@ -228,14 +295,14 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 					/**
 					 * If we are inside of rules section
 					 */
-					const filtered = line.replace(/{[\s\S]*}/, "");
+					const filtered = line.replace(/{[\s\S]*}/, "").replace(/\/\*.*?\*\//, "");
 					rules.push(filtered);
 				} else {
 					if (line.startsWith('%token')) {
 						const tokenSymbols = line.slice(6).replace(/<.*>/, "").trim().split(" ");
 						tokenSymbols.forEach(token => {
 							if (token.length > 0) {
-								this.tokens.add(token);
+								this.tokens.set(token, new vscode.Position(i, 1));
 							}
 						});
 					}
@@ -257,7 +324,7 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 			const ruleMatcher = /^[a-zA-Z0-9_]+/;
 			const rule = ruleMatcher.exec(rules[i]);
 			if (rule !== null) {
-				this.symbols.add(rule[0]);
+				this.symbols.set(rule[0], new vscode.Position(this.startingLine + i, 1));
 			}
 		}
 
@@ -285,12 +352,45 @@ class YaccSemanticAnalyzer extends SemanticAnalyzer {
 	}
 }
 
-class LexSemanticAnalyzer extends SemanticAnalyzer {
-	private defines: Set<string> = new Set();
-	private states: Set<string> = new Set();
+class LexSemanticProvider extends SemanticAnalyzer {
+	private defines: Map<string, vscode.Position> = new Map();
+	private states: Map<string, vscode.Position> = new Map();
 
 	constructor() {
 		super(['array', 'pointer', 'option', 's', 'x']);
+	}
+
+	protected _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[] {
+		const word = document.getText(document.getWordRangeAtPosition(position));
+
+		if (this.defines.has(word)) {
+			const pos = this.defines.get(word)!;
+			return new vscode.Location(document.uri, pos);
+		}
+
+		if (this.states.has(word)) {
+			const pos = this.states.get(word)!;
+			return new vscode.Location(document.uri, pos);
+		}
+
+		return [];
+	}
+
+	protected _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover {
+		const word = document.getText(document.getWordRangeAtPosition(position));
+		if (this.defines.has(word)) {
+			return { contents: ['symbol'] };
+		}
+
+		if (this.defines.has(word)) {
+			return { contents: ['definition'] };
+		}
+
+		if (this.states.has(word)) {
+			return { contents: ['initial state'] };
+		}
+
+		return { contents: [] };
 	}
 
 	protected _handleTrigger(document: vscode.TextDocument, position: vscode.Position, character: string | undefined): vscode.CompletionItem[] | vscode.CompletionList {
@@ -302,15 +402,15 @@ class LexSemanticAnalyzer extends SemanticAnalyzer {
 				return this._keywordCompletions(document, position);
 		} else if (character === '{') {
 			if (position.line < this.startingLine || line.charAt(position.character - 2) !== ' ')
-				this.defines.forEach((define) => {
-					completion = new vscode.CompletionItem(define, vscode.CompletionItemKind.Class);
+				this.defines.forEach((value, key) => {
+					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
 					completion.detail = "definition";
 					completions.push(completion);
 				})
 		} else if (character === '<' && position.line >= this.startingLine && position.line <= this.endingLine) {
 			if (line.match(/^</)) {
-				this.states.forEach((state) => {
-					completion = new vscode.CompletionItem(state, vscode.CompletionItemKind.Class);
+				this.states.forEach((value, key) => {
+					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
 					completion.detail = "initial state";
 					completions.push(completion);
 				})
@@ -368,13 +468,13 @@ class LexSemanticAnalyzer extends SemanticAnalyzer {
 						const tokenSymbols = line.slice(2).trim().split(" ");
 						tokenSymbols.forEach(token => {
 							if (token.length > 0) {
-								this.states.add(token);
+								this.states.set(token, new vscode.Position(i, 0));
 							}
 						});
 					}
 					const defined = line.match(/^[a-zA-Z0-9_]+/);
 					if (defined !== null) {
-						this.defines.add(defined[0]);
+						this.defines.set(defined[0], new vscode.Position(i, 0));
 					}
 				}
 			} else {

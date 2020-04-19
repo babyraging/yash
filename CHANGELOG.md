@@ -1,5 +1,17 @@
 # What's New?
 
+## UnReleased
+
+### Added
+- Added comment highlight (lex)
+- Added basic hover and goto definition support (lex/yacc)
+
+### Bug fixes
+- Fixed not auto-completing when writing the rule on the same line (yacc)
+- Code inline commented now won't be highlighted by semantic coloring  (yacc)
+
+## Release
+
 ## 0.0.6
 ### Changed
 - update extension icon
