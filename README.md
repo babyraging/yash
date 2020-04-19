@@ -22,26 +22,26 @@ Here is the comparison with and without semantic highlighting.
 
 On left enabled, on right disabled
 
-![](https://github.com/babyraging/yash/blob/master/images/semantic_comparison.png)
+![](images/semantic_comparison.png)
 
 ### Completion features
 
 ### Auto-Completion for keywords, declared definitions in lex/flex
 
-![](https://github.com/babyraging/yash/blob/master/images/lex_define.gif)
+![](images/lex_define.gif)
 
-![](https://github.com/babyraging/yash/blob/master/images/lex_rule.gif)
+![](images/lex_rule.gif)
 
 ### Auto-Completion for keywords, declared union types in yacc/bison
 
-![](https://github.com/babyraging/yash/blob/master/images/yacc_token.gif)
+![](images/yacc_token.gif)
 
 
 ### Auto-Completion for symbols in yacc/bison
-![](https://github.com/babyraging/yash/blob/master/images/yacc_symbol.gif)
+![](images/yacc_symbol.gif)
 
 ### Auto-Completion for symbol type in yacc/bison
-![](https://github.com/babyraging/yash/blob/master/images/yacc_type.gif)
+![](images/yacc_type.gif)
 
 ## Requirements
 
