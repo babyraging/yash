@@ -28,20 +28,20 @@ On left enabled, on right disabled
 
 ### Auto-Completion for keywords, declared definitions in lex/flex
 
-![](assets/lex_define.gif)
+![](images/lex_define.gif)
 
-![](assets/lex_rule.gif)
+![](images/lex_rule.gif)
 
 ### Auto-Completion for keywords, declared union types in yacc/bison
 
-![](assets/yacc_token.gif)
+![](images/yacc_token.gif)
 
 
 ### Auto-Completion for symbols in yacc/bison
-![](assets/yacc_symbol.gif)
+![](images/yacc_symbol.gif)
 
 ### Auto-Completion for symbol type in yacc/bison
-![](assets/yacc_type.gif)
+![](images/yacc_type.gif)
 
 ## Requirements
 
