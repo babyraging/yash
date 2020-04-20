@@ -64,15 +64,6 @@
 							"include": "#predefined"
 						},
 						{
-							"begin": " {",
-							"end": "}",
-							"patterns": [
-								{
-									"include": "#embedded"
-								}
-							]
-						},
-						{
 							"include": "#user-define"
 						},
 						{
@@ -80,11 +71,20 @@
 						},
 						{
 							"name": "constant.numeric.lex",
-							"match": "<[a-zA-Z0-9_]+>"
+							"match": "<[a-zA-Z0-9_,]+>"
 						},
 						{
 							"name": "string.unquoted",
 							"match": "^.*(?={)"
+						},
+						{
+							"begin": "{",
+							"end": "}",
+							"patterns": [
+								{
+									"include": "#embedded"
+								}
+							]
 						},
 						{
 							"name": "entity.name.function.lex",
@@ -102,25 +102,49 @@
 			]
 		},
 		"block": {
-			"name": "entity.lex",
-			"begin": "%(top)?{",
-			"end": "%}",
-			"beginCaptures": {
-				"0": {
-					"name": "markup.inserted.lex"
-				},
-				"1": {
-					"name": "variable.parameter.lex"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "markup.inserted.lex"
-				}
-			},
 			"patterns": [
 				{
-					"include": "#embedded"
+					"name": "entity.lex",
+					"begin": "%{",
+					"end": "%}",
+					"beginCaptures": {
+						"0": {
+							"name": "markup.inserted.lex"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "markup.inserted.lex"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#embedded"
+						}
+					]
+				},
+				{
+					"name": "entity.lex",
+					"begin": "%(top){",
+					"end": "}",
+					"beginCaptures": {
+						"0": {
+							"name": "markup.inserted.lex"
+						},
+						"1": {
+							"name": "variable.parameter.lex"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "markup.inserted.lex"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#embedded"
+						}
+					]
 				}
 			]
 		},
@@ -152,6 +176,9 @@
 			},
 			"patterns": [
 				{
+					"include": "#comments"
+				},
+				{
 					"name": "constant.numeric.lex",
 					"match": "."
 				}
@@ -166,6 +193,9 @@
 				}
 			},
 			"patterns": [
+				{
+					"include": "#comments"
+				},
 				{
 					"include": "#user-define"
 				},

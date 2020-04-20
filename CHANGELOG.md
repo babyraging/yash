@@ -2,15 +2,23 @@
 
 ## UnReleased
 
+## Release
+
+## 0.0.7
 ### Added
 - Added comment highlight (lex)
+- Added multi initial states <a, b, c, d> highlight (lex)
 - Added basic hover and goto definition support (lex/yacc)
+- Added new keywords, nonassoc|pure-parser|name-prefix|locations (yacc)
+- Added multiline token definitions detection (yacc)
 
 ### Bug fixes
 - Fixed not auto-completing when writing the rule on the same line (yacc)
-- Code inline commented now won't be highlighted by semantic coloring  (yacc)
-
-## Release
+- Fixed wrong semantic coloring inside the C block (yacc)
+- Fixed wrong semantic coloring for inline commented statement (lex/yacc)
+- Fixed inline comment highlighting on %xxx line (lex/yacc)
+- Temporary fixed nested C code detection (lex/yacc)
+- Fixed %top{} statement (lex/yacc)
 
 ## 0.0.6
 ### Changed

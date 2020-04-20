@@ -105,7 +105,7 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|token|left|right|defines|output|precedence|nterm)\\b",
+			"begin": "^%(option|token|expect|nonassoc|left|right|defines|output|precedence|nterm)\\b",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -113,6 +113,9 @@
 				}
 			},
 			"patterns": [
+				{
+					"include": "#comments"
+				},
 				{
 					"include": "#number"
 				},
@@ -173,7 +176,7 @@
 			]
 		},
 		"keywords-block": {
-			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer|parse-param|lex-param)",
+			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer|parse-param|lex-param|pure-parser|name-prefix|locations)",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -197,25 +200,49 @@
 			]
 		},
 		"prologue": {
-			"name": "entity.prologue.yacc",
-			"begin": "%(top)?{",
-			"end": "%}",
-			"beginCaptures": {
-				"0": {
-					"name": "markup.inserted.yacc"
-				},
-				"1": {
-					"name": "variable.parameter.yacc"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "markup.inserted.yacc"
-				}
-			},
 			"patterns": [
 				{
-					"include": "#embedded"
+					"name": "entity.prologue.yacc",
+					"begin": "%{",
+					"end": "%}",
+					"beginCaptures": {
+						"0": {
+							"name": "markup.inserted.yacc"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "markup.inserted.yacc"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#embedded"
+						}
+					]
+				},
+				{
+					"name": "entity.prologue.yacc",
+					"begin": "%(top){",
+					"end": "}",
+					"beginCaptures": {
+						"0": {
+							"name": "markup.inserted.yacc"
+						},
+						"1": {
+							"name": "variable.parameter.yacc"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "markup.inserted.yacc"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#embedded"
+						}
+					]
 				}
 			]
 		},

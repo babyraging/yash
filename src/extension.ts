@@ -34,6 +34,12 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.languages.registerDefinitionProvider('lex', lex));
 }
 
+function getEqualLengthSpaces(str: string) {
+	return str.replace(/[^\n]*/g, (m) => {
+		return ' '.repeat(m.length);
+	});
+}
+
 interface IParsedToken {
 	line: number;
 	startCharacter: number;
@@ -117,7 +123,7 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 	}
 
 	protected _keywordCompletions(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | vscode.CompletionList {
-		if (position.line >= this.startingLine) {
+		if (position.line > this.startingLine) {
 			return [];
 		}
 		return this.keywords.map((keyword) => {
@@ -142,7 +148,9 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 	private types: Map<string, vscode.Position> = new Map();
 
 	constructor() {
-		super(['type', 'option', 'token', 'left', 'right', 'define', 'output', 'precedence', 'nterm', 'destructor', 'union', 'code', 'printer', 'parse-param', 'lex-param']);
+		super(['type', 'option', 'token', 'left', 'right', 'define', 'output',
+			'precedence', 'nterm', 'destructor', 'union', 'code', 'printer',
+			'parse-param', 'lex-param', 'pure-parser', 'expect', 'name-prefix', 'locations', 'nonassoc']);
 	}
 
 	protected _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[] {
@@ -202,7 +210,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 		/**
 		 * Result suggestion on defining type
 		 */
-		if (line.match(/^%type\s*<.*>.*$/)) {
+		if (line.match(/^%type\s*<.*>[\sa-zA-Z0-9_]*$/)) {
 			var completions: vscode.CompletionItem[] = [];
 			this.symbols.forEach((value, key) => {
 				const completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
@@ -219,7 +227,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 		/**
 		 * Token and result suggestion only inside the rules section
 		 */
-		if (position.line >= this.startingLine && position.line <= this.endingLine) {
+		if (position.line > this.startingLine && position.line < this.endingLine) {
 			if (line.indexOf('|') !== -1 || line.indexOf(':') !== -1) {
 				var completions: vscode.CompletionItem[] = [];
 				var completion: vscode.CompletionItem;
@@ -240,7 +248,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 	}
 
 	private _typeParamCompletions(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | vscode.CompletionList {
-		if (position.line >= this.startingLine) {
+		if (position.line > this.startingLine) {
 			return [];
 		}
 
@@ -261,12 +269,11 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 		this.invalidRegions = [];
 		let r: IParsedToken[] = [];
 		let lines = text.split(/\r\n|\r|\n/);
-		let rules: string[] = [];
 
 		/**
 		 * Find all invalid regions
 		 */
-		const codeMatcher = /%(?=top)?{[\s\S]*?%}|{[\s\S]*?}/g;
+		const codeMatcher = /%(?=top)?{[\s\S]*?%?}|{[\s\S]*?}(?=\s*[|;])/g;
 		var cpp;
 		while ((cpp = codeMatcher.exec(text)) !== null) {
 			let start = document.positionAt(cpp.index);
@@ -284,38 +291,61 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 			}
 		}
 
-		/**
-		 * Find rule section
-		 */
 		this.startingLine = -1;
+		this.endingLine = -1;
+		let tokenContinue = false;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (!line.startsWith('%%')) {
-				if (this.startingLine !== -1) {
-					/**
-					 * If we are inside of rules section
-					 */
-					const filtered = line.replace(/{[\s\S]*}/, "").replace(/\/\*.*?\*\//, "");
-					rules.push(filtered);
-				} else {
-					if (line.startsWith('%token')) {
-						const tokenSymbols = line.slice(6).replace(/<.*>/, "").trim().split(" ");
-						tokenSymbols.forEach(token => {
-							if (token.length > 0) {
-								this.tokens.set(token, new vscode.Position(i, 1));
-							}
-						});
+
+			/**
+			 * Find rules section
+			 */
+			if (line.startsWith('%%')) {
+				this.startingLine = i;
+				for (i++; i < lines.length; i++) {
+					if (lines[i].startsWith('%%')) {
+						this.endingLine = i;
+						break;
 					}
 				}
-				continue;
-			} else {
-				if (this.startingLine === -1) {
-					this.startingLine = i + 1;
+				break;
+			}
+
+			if (line.startsWith('%')) {
+				// save tokens
+				if (line.startsWith('%token')) {
+					const tokenSymbols = line.slice(6).replace(/<.*>/, "").trim().split(" ");
+					tokenSymbols.forEach(token => {
+						if (token.length > 0) {
+							this.tokens.set(token, new vscode.Position(i, 0));
+						}
+					});
+					tokenContinue = true;
 				} else {
-					this.endingLine = i + 1;
+					tokenContinue = false;
+				}
+			} else {
+				// continue saving tokens
+				if (tokenContinue) {
+					const tokenSymbols = line.trim().split(" ");
+					tokenSymbols.forEach(token => {
+						if (token.length > 0) {
+							this.tokens.set(token, new vscode.Position(i, 0));
+						}
+					});
 				}
 			}
 		}
+
+		const ruleZone = new vscode.Range(new vscode.Position(this.startingLine, 0), new vscode.Position(this.endingLine, 0));
+		const rulesText = document.getText(ruleZone);
+
+		// TODO: optimize and review this.
+		// now remove literals, brackets and comments
+		const filtered = rulesText.replace(/\/\*[\s\S]*?\*\//g, getEqualLengthSpaces)
+			.replace(/'[^']*?'/g, getEqualLengthSpaces)
+			.replace(/{[\s\S]*?}(?=\s*[|;])/g, getEqualLengthSpaces); // TODO: this is a temporary fix
+		const rules = filtered.split(/\r\n|\r|\n/);
 
 		/**
 		 * Find all symbols
@@ -379,10 +409,6 @@ class LexSemanticProvider extends SemanticAnalyzer {
 	protected _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover {
 		const word = document.getText(document.getWordRangeAtPosition(position));
 		if (this.defines.has(word)) {
-			return { contents: ['symbol'] };
-		}
-
-		if (this.defines.has(word)) {
 			return { contents: ['definition'] };
 		}
 
@@ -407,7 +433,7 @@ class LexSemanticProvider extends SemanticAnalyzer {
 					completion.detail = "definition";
 					completions.push(completion);
 				})
-		} else if (character === '<' && position.line >= this.startingLine && position.line <= this.endingLine) {
+		} else if (character === '<' && position.line > this.startingLine && position.line < this.endingLine) {
 			if (line.match(/^</)) {
 				this.states.forEach((value, key) => {
 					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
@@ -450,17 +476,7 @@ class LexSemanticProvider extends SemanticAnalyzer {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (!line.startsWith('%%')) {
-				if (this.startingLine !== -1) {
-					/**
-					 * If we are inside of rules section
-					 */
-					cpp = /(?<=[\t\v\f ]){[\s\S]*?}/.exec(line);
-					if (cpp !== null) {
-						let start = new vscode.Position(i, cpp.index);
-						let end = new vscode.Position(i, cpp.index + cpp[0].length);
-						this.invalidRegions.push(new vscode.Range(start, end));
-					}
-				} else {
+				if (this.startingLine === -1) {
 					/**
 					 * If we are inside of definition section
 					 */
@@ -479,12 +495,29 @@ class LexSemanticProvider extends SemanticAnalyzer {
 				}
 			} else {
 				if (this.startingLine === -1) {
-					this.startingLine = i + 1;
+					this.startingLine = i;
 				} else {
-					this.endingLine = i + 1;
+					this.endingLine = i;
 				}
 			}
 		}
+
+		const ruleZone = new vscode.Range(new vscode.Position(this.startingLine, 0), new vscode.Position(this.endingLine, 0));
+		const rulesText = document.getText(ruleZone);
+		const rulesOffset = document.offsetAt(new vscode.Position(this.startingLine, 0));
+
+		// TODO: optimize and review this.
+		// now remove literals, brackets and comments
+		const filtered = rulesText.replace(/\/\*[\s\S]*?\*\//g, getEqualLengthSpaces)
+			.replace(/"[^"]*?"/g, getEqualLengthSpaces);
+		const action = /.{[\s\S]*?}(?=\s*[{<%".])/mg; // TODO: temporary fix, doesn't work for all patterns
+		var cpp;
+		while ((cpp = action.exec(filtered)) !== null) {
+			let start = document.positionAt(rulesOffset + cpp.index);
+			let end = document.positionAt(rulesOffset + cpp.index + cpp[0].length);
+			this.invalidRegions.push(new vscode.Range(start, end));
+		}
+
 		return r;
 	}
 }
