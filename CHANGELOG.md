@@ -2,6 +2,14 @@
 
 ## UnReleased
 
+## 0.0.8
+### Added
+- Added more keywords, expect-rr|start|skeleton|glr-parser|language|token-table|code imports (yacc)
+
+### Bug Fixes
+- Fixed multiplle type/token definitions on multiple lines
+- %define support string as value
+
 ## Release
 
 ## 0.0.7

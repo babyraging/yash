@@ -72,7 +72,7 @@
 				},
 				{
 					"name": "keyword.other.yacc",
-					"match": "%(empty|prec)"
+					"match": "%(empty|prec)\\b"
 				},
 				{
 					"name": "entity.action.yacc",
@@ -105,8 +105,8 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|token|expect|nonassoc|left|right|defines|output|precedence|nterm)\\b",
-			"end": "$",
+			"begin": "^%(option|token-table|token|expect-rr|expect|nonassoc|left|right|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language)\\b",
+			"end": "(?=%)",
 			"beginCaptures": {
 				"0": {
 					"name": "keyword.other.yacc"
@@ -135,7 +135,7 @@
 		},
 		"result-type": {
 			"begin": "^%type\\b",
-			"end": "$",
+			"end": "(?=%)",
 			"beginCaptures": {
 				"0": {
 					"name": "keyword.other.yacc"
@@ -152,7 +152,7 @@
 			]
 		},
 		"define": {
-			"begin": "^%(define)",
+			"begin": "^%define\\b",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -163,6 +163,9 @@
 				{
 					"name": "variable.parameter.yacc",
 					"match": "[a-zA-Z_\\.]+"
+				},
+				{
+					"include": "#strings"
 				},
 				{
 					"begin": "{",
@@ -176,7 +179,7 @@
 			]
 		},
 		"keywords-block": {
-			"begin": "^%(destructor|union|code requires|code provides|code top|code|printer|parse-param|lex-param|pure-parser|name-prefix|locations)",
+			"begin": "^%(destructor|union|code( (requires|provides|top|imports))?|printer|parse-param|lex-param)",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
