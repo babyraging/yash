@@ -105,7 +105,7 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|token-table|token|expect-rr|expect|nonassoc|left|right|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language)\\b",
+			"begin": "^%(option|token-table|token|expect-rr|expect|nonassoc|left|right|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser)\\b",
 			"end": "(?=%)",
 			"beginCaptures": {
 				"0": {
