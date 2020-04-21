@@ -2,13 +2,16 @@
 
 ## UnReleased
 
-## 0.0.8
+## Release
+
+## 0.1.0 21/04/2020
 ### Added
 - Added more keywords, expect-rr|start|skeleton|glr-parser|language|token-table|code imports (yacc)
 - Added a fancier hover message, now shows the type definition of the symbols (lex/yacc)
 
 ### Changed
 - Changed rules to completion for lex definition, better 
+- Removed preview tag
 
 ### Bug Fixes
 - Fixed multiple type/token definitions on multiple lines (yacc)
@@ -17,8 +20,6 @@
 - Fixed a bug on wrong detection of tokens (yacc) 
 - Fixed recognition of comment in %type, keywords, keywords-block, rules (yacc)
 
-
-## Release
 
 ## 0.0.7
 ### Added

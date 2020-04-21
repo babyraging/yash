@@ -96,10 +96,7 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 	}
 
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
-		const t0 = Date.now();
 		const allTokens = this._parseText(document);
-		const t1 = Date.now();
-		console.log("Parse time: " + (t1 - t0));
 		const builder = new vscode.SemanticTokensBuilder();
 		allTokens.forEach((token) => {
 			builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.tokenType), this._encodeTokenModifiers(token.tokenModifiers));
@@ -136,7 +133,7 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 		});
 	}
 
-	protected abstract _buildHoverMsg(info: string, code?: string, lang?: string): vscode.MarkdownString;
+	protected abstract _buildHoverMsg(code?: string, lang?: string, info?: string): vscode.MarkdownString;
 
 	protected abstract _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[];
 	protected abstract _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover;
@@ -163,13 +160,16 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 			'parse-param', 'lex-param', 'pure-parser', 'expect', 'name-prefix', 'locations', 'nonassoc']);
 	}
 
-	protected _buildHoverMsg(info: string, code?: string, lang?: string): vscode.MarkdownString {
+	protected _buildHoverMsg(code?: string, lang?: string, info?: string): vscode.MarkdownString {
 		const msg = new vscode.MarkdownString();
 		if (code !== undefined) {
 			msg.appendCodeblock(code, lang !== undefined ? lang : 'yacc');
-			msg.appendMarkdown('---\n');
+			if (info !== undefined)
+				msg.appendMarkdown('---\n');
 		}
-		msg.appendMarkdown(info);
+
+		if (info !== undefined)
+			msg.appendMarkdown(info);
 		return msg;
 	}
 
@@ -198,17 +198,17 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 		const word = document.getText(document.getWordRangeAtPosition(position));
 		if (this.symbols.has(word)) {
 			const symbol = this.symbols.get(word)!;
-			return { contents: [this._buildHoverMsg("symbol", symbol.snippet)] }
+			return { contents: [this._buildHoverMsg(symbol.snippet)] }
 		}
 
 		if (this.tokens.has(word)) {
 			const symbol = this.tokens.get(word)!;
-			return { contents: [this._buildHoverMsg("token", symbol.snippet)] }
+			return { contents: [this._buildHoverMsg(symbol.snippet)] }
 		}
 
 		if (this.types.has(word)) {
 			const symbol = this.types.get(word)!;
-			return { contents: [this._buildHoverMsg("type", symbol.snippet)] }
+			return { contents: [this._buildHoverMsg(symbol.snippet)] }
 		}
 
 		return { contents: [] };
@@ -450,7 +450,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 				if (symbol !== undefined) {
 					this.symbols.set(rule[0], { name: rule[0], snippet: symbol.snippet, position: new vscode.Position(this.startingLine + i, 1) });
 				} else {
-					this.symbols.set(rule[0], { name: rule[0], position: new vscode.Position(this.startingLine + i, 1) });
+					this.symbols.set(rule[0], { name: rule[0], snippet: "%type <?> " + rule[0], position: new vscode.Position(this.startingLine + i, 1) });
 				}
 			}
 		}
@@ -487,13 +487,16 @@ class LexSemanticProvider extends SemanticAnalyzer {
 		super(['array', 'pointer', 'option', 's', 'x']);
 	}
 
-	protected _buildHoverMsg(info: string, code?: string, lang?: string): vscode.MarkdownString {
+	protected _buildHoverMsg(code?: string, lang?: string, info?: string): vscode.MarkdownString {
 		const msg = new vscode.MarkdownString();
 		if (code !== undefined) {
 			msg.appendCodeblock(code, lang !== undefined ? lang : 'lex');
-			msg.appendMarkdown('---\n');
+			if (info !== undefined)
+				msg.appendMarkdown('---\n');
 		}
-		msg.appendMarkdown(info);
+
+		if (info !== undefined)
+			msg.appendMarkdown(info);
 		return msg;
 	}
 
@@ -517,12 +520,12 @@ class LexSemanticProvider extends SemanticAnalyzer {
 		const word = document.getText(document.getWordRangeAtPosition(position));
 		if (this.defines.has(word)) {
 			const symbol = this.defines.get(word)!;
-			return { contents: [this._buildHoverMsg("definition", symbol.snippet)] };
+			return { contents: [this._buildHoverMsg(symbol.snippet)] };
 		}
 
 		if (this.states.has(word)) {
 			const symbol = this.states.get(word)!;
-			return { contents: [this._buildHoverMsg("initial state", symbol.snippet)] };
+			return { contents: [this._buildHoverMsg(symbol.snippet)] };
 		}
 
 		return { contents: [] };
@@ -600,7 +603,7 @@ class LexSemanticProvider extends SemanticAnalyzer {
 
 		let brackets = 0;
 		let currentPos: vscode.Position | undefined = undefined;
-
+		let isBlock = false;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (line.startsWith('%%')) {
@@ -632,9 +635,13 @@ class LexSemanticProvider extends SemanticAnalyzer {
 				continue;
 			}
 
-			if (this.startingLine !== -1 || line.startsWith('%')) {
+			if (line.match(/^%(top)?/)) {
+				isBlock = true;
+			}
+
+			if (this.startingLine !== -1 || isBlock) {
 				let j = 0;
-				const defines = /^(?:{[a-zA-Z0-9_]+})+\s+/.exec(line);
+				const defines = /^(?:<[a-zA-Z0-9_,]+>)?(?:{[a-zA-Z0-9_]+})+\s+/.exec(line);
 				if (defines) {
 					j = defines[0].length;
 				}
@@ -656,6 +663,7 @@ class LexSemanticProvider extends SemanticAnalyzer {
 							if (brackets === 0) {
 								this.invalidRegions.push(new vscode.Range(currentPos!, new vscode.Position(i, j)));
 								currentPos = undefined;
+								if (isBlock) isBlock = false;
 							}
 							break;
 						default:
