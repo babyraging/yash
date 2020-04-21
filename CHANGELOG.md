@@ -11,10 +11,11 @@
 - Changed rules to completion for lex definition, better 
 
 ### Bug Fixes
-- Fixed multiple type/token definitions on multiple lines
-- %define support string as value
+- Fixed multiple type/token definitions on multiple lines (yacc)
+- %define support string as value (yacc)
 - Fixed nested C block detection, better implementation (lex/yacc)
 - Fixed a bug on wrong detection of tokens (yacc) 
+- Fixed recognition of comment in %type, keywords, keywords-block, rules (yacc)
 
 
 ## Release

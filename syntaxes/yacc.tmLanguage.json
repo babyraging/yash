@@ -61,6 +61,9 @@
 					"include": "#comments"
 				},
 				{
+					"include": "#comment"
+				},
+				{
 					"include": "#character"
 				},
 				{
@@ -117,6 +120,9 @@
 					"include": "#comments"
 				},
 				{
+					"include": "comment"
+				},
+				{
 					"include": "#number"
 				},
 				{
@@ -148,6 +154,12 @@
 				{
 					"name": "support.class.yacc",
 					"match": "[a-zA-Z0-9_]+"
+				},
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
@@ -166,6 +178,12 @@
 				},
 				{
 					"include": "#strings"
+				},
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#comment"
 				},
 				{
 					"begin": "{",
@@ -199,6 +217,12 @@
 				},
 				{
 					"include": "#variables"
+				},
+				{
+					"include": "#comments"
+				},
+				{
+					"include": "#comment"
 				}
 			]
 		},
