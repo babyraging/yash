@@ -2,6 +2,9 @@
 
 ## UnReleased
 
+### Bug Fixes
+- Fixed wrong type detection for multiline token/symbol (yacc)
+
 ## Release
 
 ## 0.1.0 21/04/2020

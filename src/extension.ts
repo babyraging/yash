@@ -337,6 +337,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 					tokenContinue = true;
 					continue;
 				} else {
+					tokenType = ''
 					tokenContinue = false;
 				}
 
@@ -353,6 +354,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 					symbolContinue = true;
 					continue;
 				} else {
+					symbolType = ''
 					symbolContinue = false;
 				}
 
@@ -368,7 +370,6 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 							this.tokens.set(token, { name: token, snippet: '%token' + tokenType + ' ' + token, position: new vscode.Position(i, 0) });
 						}
 					});
-					tokenType = ''
 					continue;
 				}
 
@@ -379,7 +380,6 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 							this.symbols.set(symbol, { name: symbol, snippet: '%type' + symbolType + ' ' + symbol, position: new vscode.Position(i, 0) });
 						}
 					});
-					symbolType = ''
 					continue;
 				}
 			}
