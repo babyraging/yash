@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function getEqualLengthSpaces(str: string) {
-	return str.replace(/[^\n]*/g, (m) => {
+	return str.replace(/[^\n]*/mg, (m) => {
 		return ' '.repeat(m.length);
 	});
 }
@@ -96,7 +96,10 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 	}
 
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
+		const t0 = Date.now();
 		const allTokens = this._parseText(document);
+		const t1 = Date.now();
+		console.log("Parse time: " + (t1 - t0));
 		const builder = new vscode.SemanticTokensBuilder();
 		allTokens.forEach((token) => {
 			builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.tokenType), this._encodeTokenModifiers(token.tokenModifiers));
@@ -133,6 +136,7 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 		});
 	}
 
+	protected abstract _buildHoverMsg(info: string, code?: string, lang?: string): vscode.MarkdownString;
 
 	protected abstract _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[];
 	protected abstract _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover;
@@ -142,10 +146,16 @@ abstract class SemanticAnalyzer implements vscode.DocumentSemanticTokensProvider
 	protected abstract _parseText(document: vscode.TextDocument): IParsedToken[];
 }
 
+interface ISymbolDefinition {
+	name: string;
+	snippet?: string;
+	position: vscode.Position;
+};
+
 class YaccSemanticProvider extends SemanticAnalyzer {
-	private symbols: Map<string, vscode.Position> = new Map();
-	private tokens: Map<string, vscode.Position> = new Map();
-	private types: Map<string, vscode.Position> = new Map();
+	private symbols: Map<string, ISymbolDefinition> = new Map();
+	private tokens: Map<string, ISymbolDefinition> = new Map();
+	private types: Map<string, ISymbolDefinition> = new Map();
 
 	constructor() {
 		super(['type', 'option', 'token', 'left', 'right', 'define', 'output',
@@ -153,22 +163,32 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 			'parse-param', 'lex-param', 'pure-parser', 'expect', 'name-prefix', 'locations', 'nonassoc']);
 	}
 
+	protected _buildHoverMsg(info: string, code?: string, lang?: string): vscode.MarkdownString {
+		const msg = new vscode.MarkdownString();
+		if (code !== undefined) {
+			msg.appendCodeblock(code, lang !== undefined ? lang : 'yacc');
+			msg.appendMarkdown('---\n');
+		}
+		msg.appendMarkdown(info);
+		return msg;
+	}
+
 	protected _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[] {
 		const word = document.getText(document.getWordRangeAtPosition(position));
 
 		if (this.symbols.has(word)) {
 			const pos = this.symbols.get(word)!;
-			return new vscode.Location(document.uri, pos);
+			return new vscode.Location(document.uri, pos.position);
 		}
 
 		if (this.tokens.has(word)) {
 			const pos = this.tokens.get(word)!;
-			return new vscode.Location(document.uri, pos);
+			return new vscode.Location(document.uri, pos.position);
 		}
 
 		if (this.types.has(word)) {
 			const pos = this.types.get(word)!;
-			return new vscode.Location(document.uri, pos);
+			return new vscode.Location(document.uri, pos.position);
 		}
 
 		return [];
@@ -177,15 +197,18 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 	protected _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover {
 		const word = document.getText(document.getWordRangeAtPosition(position));
 		if (this.symbols.has(word)) {
-			return { contents: ['symbol'] }
+			const symbol = this.symbols.get(word)!;
+			return { contents: [this._buildHoverMsg("symbol", symbol.snippet)] }
 		}
 
 		if (this.tokens.has(word)) {
-			return { contents: ['token'] }
+			const symbol = this.tokens.get(word)!;
+			return { contents: [this._buildHoverMsg("token", symbol.snippet)] }
 		}
 
 		if (this.types.has(word)) {
-			return { contents: ['type'] }
+			const symbol = this.types.get(word)!;
+			return { contents: [this._buildHoverMsg("type", symbol.snippet)] }
 		}
 
 		return { contents: [] };
@@ -264,65 +287,77 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 
 	protected _parseText(document: vscode.TextDocument): IParsedToken[] {
 		let text = document.getText();
+		this.startingLine = -1;
+		this.endingLine = document.lineCount;
 		this.tokens.clear();
 		this.symbols.clear();
 		this.invalidRegions = [];
-		let r: IParsedToken[] = [];
-		let lines = text.split(/\r\n|\r|\n/);
 
-		/**
-		 * Find all invalid regions
-		 */
-		const codeMatcher = /%(?=top)?{[\s\S]*?%?}|{[\s\S]*?}(?=\s*[|;])/g;
-		var cpp;
-		while ((cpp = codeMatcher.exec(text)) !== null) {
-			let start = document.positionAt(cpp.index);
-			let end = document.positionAt(cpp.index + cpp[0].length);
-			this.invalidRegions.push(new vscode.Range(start, end));
-		}
+		const r: IParsedToken[] = [];
+		text = text.replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|\/\*[\s\S]*?\*\//mg, getEqualLengthSpaces);
 
-		const yyType = /%union\s*{([\s\S]*?)}/.exec(text);
-		if (yyType !== null) {
-			const typeMatcher = /([a-zA-Z0-9_]*)\s*;/g
-			var res;
-			while ((res = typeMatcher.exec(yyType[1])) !== null) {
-				const position = document.positionAt(yyType.index + res.index);
-				this.types.set(res[1], position);
-			}
-		}
+		const lines = text.split(/\r\n|\r|\n/);
 
-		this.startingLine = -1;
-		this.endingLine = -1;
+		let brackets = 0;
+		let currentPos: vscode.Position | undefined = undefined;
 		let tokenContinue = false;
+		let tokenType = '';
+		let symbolContinue = false;
+		let symbolType = '';
+		let unionFound = false;
+		let rulesText: string = '';
+		const rules: string[] = [];
+
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-
-			/**
-			 * Find rules section
-			 */
 			if (line.startsWith('%%')) {
-				this.startingLine = i;
-				for (i++; i < lines.length; i++) {
-					if (lines[i].startsWith('%%')) {
-						this.endingLine = i;
-						break;
-					}
+				if (this.startingLine === -1)
+					this.startingLine = i;
+				else {
+					/**
+					 * Stop on end rules section
+					 */
+					this.endingLine = i;
+					break;
 				}
-				break;
 			}
 
 			if (line.startsWith('%')) {
 				// save tokens
 				if (line.startsWith('%token')) {
+					const type = line.match(/(<.*>)/);
+					if (type) tokenType = ' ' + type[1];
+					else tokenType = '';
 					const tokenSymbols = line.slice(6).replace(/<.*>/, "").trim().split(" ");
 					tokenSymbols.forEach(token => {
 						if (token.length > 0) {
-							this.tokens.set(token, new vscode.Position(i, 0));
+							this.tokens.set(token, { name: token, snippet: '%token' + tokenType + ' ' + token, position: new vscode.Position(i, 0) });
 						}
 					});
 					tokenContinue = true;
+					continue;
 				} else {
 					tokenContinue = false;
+				}
+
+				if (line.startsWith('%type')) {
+					const type = line.match(/(<.*>)/);
+					if (type) symbolType = ' ' + type[1];
+					else symbolType = '';
+					const symbols = line.slice(5).replace(/<.*>/, "").trim().split(" ");
+					symbols.forEach(symbol => {
+						if (symbol.length > 0) {
+							this.symbols.set(symbol, { name: symbol, snippet: '%type' + symbolType + ' ' + symbol, position: new vscode.Position(i, 0) });
+						}
+					});
+					symbolContinue = true;
+					continue;
+				} else {
+					symbolContinue = false;
+				}
+
+				if (line.startsWith('%union')) {
+					unionFound = true;
 				}
 			} else {
 				// continue saving tokens
@@ -330,22 +365,79 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 					const tokenSymbols = line.trim().split(" ");
 					tokenSymbols.forEach(token => {
 						if (token.length > 0) {
-							this.tokens.set(token, new vscode.Position(i, 0));
+							this.tokens.set(token, { name: token, snippet: '%token' + tokenType + ' ' + token, position: new vscode.Position(i, 0) });
 						}
 					});
+					tokenType = ''
+					continue;
+				}
+
+				if (symbolContinue) {
+					const symbols = line.trim().split(" ");
+					symbols.forEach(symbol => {
+						if (symbol.length > 0) {
+							this.symbols.set(symbol, { name: symbol, snippet: '%type' + symbolType + ' ' + symbol, position: new vscode.Position(i, 0) });
+						}
+					});
+					symbolType = ''
+					continue;
 				}
 			}
+
+			if (unionFound) {
+				const type = /^(.*[ \t\f*&])([a-zA-Z0-9_]+)\s*;$/.exec(line);
+				if (type !== null) {
+					const snippet = type[1].replace(/\s*/g, "") + " " + type[2];
+					this.types.set(type[2], { name: type[2], snippet: snippet, position: new vscode.Position(i, type.index) });
+				}
+			}
+
+			/**
+			 * Finding nested C code block
+			 */
+			for (let j = 0; j < line.length; j++) {
+				const ch = line[j];
+				switch (ch) {
+					case '{':
+						brackets++;
+						if (currentPos === undefined) {
+							currentPos = new vscode.Position(i, j);
+						}
+						if (this.startingLine !== -1) {
+							rulesText += ' ';
+						}
+						break;
+					case '}':
+						brackets--;
+						if (brackets === 0) {
+							this.invalidRegions.push(new vscode.Range(currentPos!, new vscode.Position(i, j)));
+							currentPos = undefined;
+							if (unionFound)
+								unionFound = false;
+						}
+						if (this.startingLine !== -1) {
+							rulesText += ' ';
+						}
+						break;
+					default:
+						if (this.startingLine !== -1) {
+							/**
+							 * Clear out C code and save yacc code
+							 */
+							if (brackets === 0)
+								rulesText += ch;
+							else
+								rulesText += ' ';
+						}
+						break;
+				}
+			}
+
+			if (this.startingLine !== -1) {
+				rules.push(rulesText);
+				rulesText = '';
+			}
 		}
-
-		const ruleZone = new vscode.Range(new vscode.Position(this.startingLine, 0), new vscode.Position(this.endingLine, 0));
-		const rulesText = document.getText(ruleZone);
-
-		// TODO: optimize and review this.
-		// now remove literals, brackets and comments
-		const filtered = rulesText.replace(/\/\*[\s\S]*?\*\//g, getEqualLengthSpaces)
-			.replace(/'[^']*?'/g, getEqualLengthSpaces)
-			.replace(/{[\s\S]*?}(?=\s*[|;])/g, getEqualLengthSpaces); // TODO: this is a temporary fix
-		const rules = filtered.split(/\r\n|\r|\n/);
 
 		/**
 		 * Find all symbols
@@ -354,7 +446,12 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 			const ruleMatcher = /^[a-zA-Z0-9_]+/;
 			const rule = ruleMatcher.exec(rules[i]);
 			if (rule !== null) {
-				this.symbols.set(rule[0], new vscode.Position(this.startingLine + i, 1));
+				const symbol = this.symbols.get(rule[0]);
+				if (symbol !== undefined) {
+					this.symbols.set(rule[0], { name: rule[0], snippet: symbol.snippet, position: new vscode.Position(this.startingLine + i, 1) });
+				} else {
+					this.symbols.set(rule[0], { name: rule[0], position: new vscode.Position(this.startingLine + i, 1) });
+				}
 			}
 		}
 
@@ -383,11 +480,21 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 }
 
 class LexSemanticProvider extends SemanticAnalyzer {
-	private defines: Map<string, vscode.Position> = new Map();
-	private states: Map<string, vscode.Position> = new Map();
+	private defines: Map<string, ISymbolDefinition> = new Map();
+	private states: Map<string, ISymbolDefinition> = new Map();
 
 	constructor() {
 		super(['array', 'pointer', 'option', 's', 'x']);
+	}
+
+	protected _buildHoverMsg(info: string, code?: string, lang?: string): vscode.MarkdownString {
+		const msg = new vscode.MarkdownString();
+		if (code !== undefined) {
+			msg.appendCodeblock(code, lang !== undefined ? lang : 'lex');
+			msg.appendMarkdown('---\n');
+		}
+		msg.appendMarkdown(info);
+		return msg;
 	}
 
 	protected _provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | vscode.Location[] | vscode.LocationLink[] {
@@ -395,12 +502,12 @@ class LexSemanticProvider extends SemanticAnalyzer {
 
 		if (this.defines.has(word)) {
 			const pos = this.defines.get(word)!;
-			return new vscode.Location(document.uri, pos);
+			return new vscode.Location(document.uri, pos.position);
 		}
 
 		if (this.states.has(word)) {
 			const pos = this.states.get(word)!;
-			return new vscode.Location(document.uri, pos);
+			return new vscode.Location(document.uri, pos.position);
 		}
 
 		return [];
@@ -409,11 +516,13 @@ class LexSemanticProvider extends SemanticAnalyzer {
 	protected _provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover {
 		const word = document.getText(document.getWordRangeAtPosition(position));
 		if (this.defines.has(word)) {
-			return { contents: ['definition'] };
+			const symbol = this.defines.get(word)!;
+			return { contents: [this._buildHoverMsg("definition", symbol.snippet)] };
 		}
 
 		if (this.states.has(word)) {
-			return { contents: ['initial state'] };
+			const symbol = this.states.get(word)!;
+			return { contents: [this._buildHoverMsg("initial state", symbol.snippet)] };
 		}
 
 		return { contents: [] };
@@ -427,12 +536,24 @@ class LexSemanticProvider extends SemanticAnalyzer {
 			if (line.startsWith('%'))
 				return this._keywordCompletions(document, position);
 		} else if (character === '{') {
-			if (position.line < this.startingLine || line.charAt(position.character - 2) !== ' ')
+			var ok = false;
+			if (position.line < this.startingLine) {
+				// if before rules zone, definition need to be on the right
+				ok = line.match(/^[a-zA-Z0-9_]+/) !== null;
+			} else if (position.line < this.endingLine) {
+				// if inside rules zone
+				const res = line.match(/^(?:{[a-zA-Z0-9_]*}?)+/);
+				if (res) {
+					ok = res[0].length === position.character;
+				}
+			}
+			if (ok) {
 				this.defines.forEach((value, key) => {
 					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
 					completion.detail = "definition";
 					completions.push(completion);
 				})
+			}
 		} else if (character === '<' && position.line > this.startingLine && position.line < this.endingLine) {
 			if (line.match(/^</)) {
 				this.states.forEach((value, key) => {
@@ -447,75 +568,101 @@ class LexSemanticProvider extends SemanticAnalyzer {
 	}
 
 	protected _rulesCompletion(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | vscode.CompletionList {
+		const line = document.lineAt(position).text.substr(0, position.character);
+		const res = line.match(/^(?:{[a-zA-Z0-9_]*}?)+/);
+		console.log(line)
+		if (res) {
+			if (res[0].length === position.character) {
+				const completions: vscode.CompletionItem[] = [];
+				this.defines.forEach((value, key) => {
+					const completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class);
+					completion.detail = "definition";
+					completions.push(completion);
+				})
+
+				return completions;
+			}
+		}
 		return [];
 	}
 
 	protected _parseText(document: vscode.TextDocument): IParsedToken[] {
-		this.invalidRegions = [];
-		this.defines.clear();
-
 		let text = document.getText();
-		let r: IParsedToken[] = [];
-		let lines = text.split(/\r\n|\r|\n/);
-
-		/**
-		 * Find all invalid regions
-		 */
-		const codeMatcher = /%(?=top)?{[\s\S]*?%}/g;
-		var cpp;
-		while ((cpp = codeMatcher.exec(text)) !== null) {
-			let start = document.positionAt(cpp.index);
-			let end = document.positionAt(cpp.index + cpp[0].length);
-			this.invalidRegions.push(new vscode.Range(start, end));
-		}
-
-		/**
-		 * Find rule section
-		 */
 		this.startingLine = -1;
+		this.endingLine = document.lineCount;
+		this.defines.clear();
+		this.invalidRegions = [];
+
+		const r: IParsedToken[] = [];
+		text = text.replace(/"\/\*[\s\S]*?\*\//mg, getEqualLengthSpaces);
+
+		const lines = text.split(/\r\n|\r|\n/);
+
+		let brackets = 0;
+		let currentPos: vscode.Position | undefined = undefined;
+
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (!line.startsWith('%%')) {
-				if (this.startingLine === -1) {
-					/**
-					 * If we are inside of definition section
-					 */
-					if (line.startsWith('%s') || line.startsWith('%x')) {
-						const tokenSymbols = line.slice(2).trim().split(" ");
-						tokenSymbols.forEach(token => {
-							if (token.length > 0) {
-								this.states.set(token, new vscode.Position(i, 0));
-							}
-						});
-					}
-					const defined = line.match(/^[a-zA-Z0-9_]+/);
-					if (defined !== null) {
-						this.defines.set(defined[0], new vscode.Position(i, 0));
-					}
-				}
-			} else {
-				if (this.startingLine === -1) {
+			if (line.startsWith('%%')) {
+				if (this.startingLine === -1)
 					this.startingLine = i;
-				} else {
+				else {
+					/**
+					 * Stop on end rules section
+					 */
 					this.endingLine = i;
+					break;
 				}
 			}
-		}
 
-		const ruleZone = new vscode.Range(new vscode.Position(this.startingLine, 0), new vscode.Position(this.endingLine, 0));
-		const rulesText = document.getText(ruleZone);
-		const rulesOffset = document.offsetAt(new vscode.Position(this.startingLine, 0));
+			if (this.startingLine === -1) {
+				const defined = line.match(/^[a-zA-Z0-9_]+/);
+				if (defined !== null) {
+					this.defines.set(defined[0], { name: defined[0], snippet: line.trim(), position: new vscode.Position(i, 0) });
+				}
+			}
 
-		// TODO: optimize and review this.
-		// now remove literals, brackets and comments
-		const filtered = rulesText.replace(/\/\*[\s\S]*?\*\//g, getEqualLengthSpaces)
-			.replace(/"[^"]*?"/g, getEqualLengthSpaces);
-		const action = /.{[\s\S]*?}(?=\s*[{<%".])/mg; // TODO: temporary fix, doesn't work for all patterns
-		var cpp;
-		while ((cpp = action.exec(filtered)) !== null) {
-			let start = document.positionAt(rulesOffset + cpp.index);
-			let end = document.positionAt(rulesOffset + cpp.index + cpp[0].length);
-			this.invalidRegions.push(new vscode.Range(start, end));
+			if (line.startsWith('%x') || line.startsWith('%s')) {
+				const tokenSymbols = line.slice(2).trim().split(" ");
+				tokenSymbols.forEach(token => {
+					if (token.length > 0) {
+						this.states.set(token, { name: token, snippet: line.trim(), position: new vscode.Position(i, 0) });
+					}
+				});
+				continue;
+			}
+
+			if (this.startingLine !== -1 || line.startsWith('%')) {
+				let j = 0;
+				const defines = /^(?:{[a-zA-Z0-9_]+})+\s+/.exec(line);
+				if (defines) {
+					j = defines[0].length;
+				}
+
+				/**
+				 * Finding nested C code block
+				 */
+				for (; j < line.length; j++) {
+					const ch = line[j];
+					switch (ch) {
+						case '{':
+							brackets++;
+							if (currentPos === undefined) {
+								currentPos = new vscode.Position(i, j);
+							}
+							break;
+						case '}':
+							brackets--;
+							if (brackets === 0) {
+								this.invalidRegions.push(new vscode.Range(currentPos!, new vscode.Position(i, j)));
+								currentPos = undefined;
+							}
+							break;
+						default:
+							break;
+					}
+				}
+			}
 		}
 
 		return r;

@@ -5,10 +5,17 @@
 ## 0.0.8
 ### Added
 - Added more keywords, expect-rr|start|skeleton|glr-parser|language|token-table|code imports (yacc)
+- Added a fancier hover message, now shows the type definition of the symbols (lex/yacc)
+
+### Changed
+- Changed rules to completion for lex definition, better 
 
 ### Bug Fixes
-- Fixed multiplle type/token definitions on multiple lines
+- Fixed multiple type/token definitions on multiple lines
 - %define support string as value
+- Fixed nested C block detection, better implementation (lex/yacc)
+- Fixed a bug on wrong detection of tokens (yacc) 
+
 
 ## Release
 
