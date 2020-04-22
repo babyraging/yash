@@ -2,11 +2,17 @@
 
 ## UnReleased
 
+## Release
+
+## 0.1.1
+### Added
+- Added folding for %{ ... %}
+- Added auto closing for %% %% pair
+
 ### Bug Fixes
 - Fixed wrong type detection for multiline token/symbol (yacc)
 - Fixed recognition of not allowed single line comment in declatation (lex)
-
-## Release
+- Fixed confusion with % and %%; should not suggest keyword on %%
 
 ## 0.1.0 21/04/2020
 ### Added

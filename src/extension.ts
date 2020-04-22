@@ -217,7 +217,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 	protected _handleTrigger(document: vscode.TextDocument, position: vscode.Position, character: string | undefined): vscode.CompletionItem[] | vscode.CompletionList {
 		let line = document.lineAt(position).text.substr(0, position.character);
 		if (character === '%') {
-			if (line.startsWith('%'))
+			if (line.startsWith('%') && !line.startsWith('%%'))
 				return this._keywordCompletions(document, position);
 		} else if (character === '<') {
 			if (line.match(/^%(?:type|token)\s*<.*/)) {
@@ -536,7 +536,7 @@ class LexSemanticProvider extends SemanticAnalyzer {
 		const completions: vscode.CompletionItem[] = [];
 		let line = document.lineAt(position).text.substr(0, position.character);
 		if (character === '%') {
-			if (line.startsWith('%'))
+			if (line.startsWith('%') && !line.startsWith('%%'))
 				return this._keywordCompletions(document, position);
 		} else if (character === '{') {
 			var ok = false;
