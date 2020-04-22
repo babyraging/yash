@@ -9,13 +9,13 @@
 			"include": "#symbols"
 		},
 		{
+			"include": "#subroutine"
+		},
+		{
 			"include": "#definition"
 		},
 		{
 			"include": "#rules"
-		},
-		{
-			"include": "#subroutine"
 		}
 	],
 	"repository": {
@@ -32,12 +32,16 @@
 				},
 				{
 					"include": "#defines"
+				},
+				{
+					"include": "#comments"
 				}
 			]
 		},
 		"rules": {
 			"patterns": [
-				{
+				{	
+					"name": "entity.rules.lex",
 					"begin": "%%",
 					"end": "%%",
 					"beginCaptures": {
@@ -95,6 +99,9 @@
 			]
 		},
 		"subroutine": {
+			"name":"entity.subroutine.lex",
+			"begin": "(?<=%%)",
+			"end": "",
 			"patterns": [
 				{
 					"include": "#embedded"
@@ -104,7 +111,7 @@
 		"block": {
 			"patterns": [
 				{
-					"name": "entity.lex",
+					"name": "entity.block.lex",
 					"begin": "%{",
 					"end": "%}",
 					"beginCaptures": {
@@ -124,7 +131,7 @@
 					]
 				},
 				{
-					"name": "entity.lex",
+					"name": "entity.block.lex",
 					"begin": "%(top){",
 					"end": "}",
 					"beginCaptures": {

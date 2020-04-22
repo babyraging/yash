@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 - Fixed wrong type detection for multiline token/symbol (yacc)
+- Fixed recognition of not allowed single line comment in declatation (lex)
 
 ## Release
 
