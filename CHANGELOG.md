@@ -2,6 +2,12 @@
 
 ## UnReleased
 
+## 0.1.2
+### Added
+
+### Bug Fixes
+- Fixed recognition of extended nonterminal name reference (name for action section) (yacc)
+
 ## Release
 
 ## 0.1.1

@@ -67,6 +67,9 @@
 					"include": "#character"
 				},
 				{
+					"include": "#nonterminalExtension"
+				},
+				{
 					"include": "#variables"
 				},
 				{
@@ -294,6 +297,16 @@
 				{
 					"name": "variable.parameter.yacc",
 					"match": "[a-zA-Z_]+"
+				}
+			]
+		},
+		"nonterminalExtension": {
+			"begin": "(?<=[a-zA-Z])\\[",
+			"end": "\\]",
+			"patterns": [
+				{
+					"name": "keyword.variables.yacc",
+					"match": "[a-zA-Z]+[0-9]*"
 				}
 			]
 		},
