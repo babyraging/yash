@@ -3,23 +3,20 @@
 	"name": "Lex",
 	"patterns": [
 		{
-			"include": "#strings"
-		},
-		{
-			"include": "#symbols"
-		},
-		{
 			"include": "#subroutine"
 		},
 		{
-			"include": "#definition"
+			"include": "#rules"
 		},
 		{
-			"include": "#rules"
+			"include": "#definition"
 		}
 	],
 	"repository": {
 		"definition": {
+			"name":"entity.declaration.lex",
+			"begin": "",
+			"end": "(?=%%)",
 			"patterns": [
 				{
 					"include": "#block"
@@ -35,6 +32,9 @@
 				},
 				{
 					"include": "#comments"
+				},
+				{
+					"include": "#strings"
 				}
 			]
 		},
