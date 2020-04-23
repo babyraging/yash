@@ -78,7 +78,7 @@
 				},
 				{
 					"name": "keyword.other.yacc",
-					"match": "%(empty|prec)\\b"
+					"match": "%(empty|prec)"
 				},
 				{
 					"name": "entity.action.yacc",
@@ -111,7 +111,7 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|token-table|token|expect-rr|expect|nonassoc|left|right|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser)(?=\\s)",
+			"begin": "^%(option|token-table|token(?=(\\s|<))|expect-rr|expect|nonassoc(?=\\s)|left(?=\\s)|right(?=\\s)|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser)",
 			"end": "(?=%)",
 			"beginCaptures": {
 				"0": {
@@ -143,7 +143,7 @@
 			]
 		},
 		"result-type": {
-			"begin": "^%type(?=\\s)",
+			"begin": "^%type(?=(\\s|<))",
 			"end": "(?=%)",
 			"beginCaptures": {
 				"0": {
@@ -156,7 +156,7 @@
 				},
 				{
 					"name": "support.class.yacc",
-					"match": "[a-zA-Z]+\\w*(?=\\s)"
+					"match": "[a-zA-Z]+\\w*"
 				},
 				{
 					"include": "#comments"
@@ -296,12 +296,12 @@
 			"patterns": [
 				{
 					"name": "variable.parameter.yacc",
-					"match": "[a-zA-Z_]+\\w*(?=\\s)"
+					"match": "[a-zA-Z_]+\\w*"
 				}
 			]
 		},
 		"nonterminalExtension": {
-			"begin": "(?<=[a-zA-Z_])\\[",
+			"begin": "(?<=\\w)\\[",
 			"end": "\\]",
 			"patterns": [
 				{

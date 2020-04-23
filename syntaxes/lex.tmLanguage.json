@@ -74,6 +74,9 @@
 							"include": "#symbols"
 						},
 						{
+							"include": "#startcondition_block"
+						},
+						{
 							"name": "constant.numeric.lex",
 							"match": "<[a-zA-Z0-9_,]+>"
 						},
@@ -172,6 +175,65 @@
 					"match": "[a-zA-Z0-9-]+"
 				}
 			]
+		},
+		"startcondition_block": {
+				"name": "entity.startcondition.lex",
+				"begin": "<[a-zA-Z0-9_,]+>[ ]*{(?=$)",
+				"end": "^}",
+				"beginCaptures": {
+					"0": {
+						"name": "constant.numeric.lex"
+					}
+				},
+				"endCaptures": {
+					"0": {
+						"name": "constant.numeric.lex"
+					}
+				},
+				"patterns": [
+					{
+						"include": "#comments"
+					},
+					{
+						"include": "#strings"
+					},
+					{
+						"include": "#block"
+					},
+					{
+						"include": "#predefined"
+					},
+					{
+						"include": "#user-define"
+					},
+					{
+						"include": "#symbols"
+					},
+					{
+						"include": "#startcondition_block"
+					},
+					{
+						"name": "constant.numeric.lex",
+						"match": "<[a-zA-Z0-9_,]+>"
+					},
+					{
+						"name": "string.unquoted",
+						"match": "^.*(?={)"
+					},
+					{
+						"begin": "{",
+						"end": "}",
+						"patterns": [
+							{
+								"include": "#embedded"
+							}
+						]
+					},
+					{
+						"name": "entity.name.function.lex",
+						"match": "."
+					}
+				]
 		},
 		"states": {
 			"begin": "^%[sx]",
