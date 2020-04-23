@@ -149,10 +149,16 @@ interface ISymbolDefinition {
 	position: vscode.Position;
 };
 
+enum LineType {
+	Definition,
+	Rule
+};
+
 class YaccSemanticProvider extends SemanticAnalyzer {
 	private symbols: Map<string, ISymbolDefinition> = new Map();
 	private tokens: Map<string, ISymbolDefinition> = new Map();
 	private types: Map<string, ISymbolDefinition> = new Map();
+	private rulesSection: [LineType, string][] = [];
 
 	constructor() {
 		super(['type', 'option', 'token', 'left', 'right', 'define', 'output',
@@ -250,22 +256,76 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 		/**
 		 * Token and result suggestion only inside the rules section
 		 */
-		if (position.line > this.startingLine && position.line < this.endingLine) {
-			if (line.indexOf('|') !== -1 || line.indexOf(':') !== -1) {
-				var completions: vscode.CompletionItem[] = [];
-				var completion: vscode.CompletionItem;
-				this.symbols.forEach((value, key) => {
-					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class)
-					completion.detail = "symbol";
-					completions.push(completion);
-				})
-				this.tokens.forEach((value, key) => {
-					completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Field)
-					completion.detail = "token";
-					completions.push(completion);
-				})
-				return completions;
-			}
+		if (position.line > this.startingLine && position.line < this.endingLine && position.character > 1) {
+			const startLine = position.line - this.startingLine;
+			var localLine = position.line - this.startingLine;
+			var rule;
+			var parens = 0;
+			var braces = 0;
+			// TODO: make a validation function
+			do {
+				/* Loop until we get the definition line */
+				rule = this.rulesSection[localLine];
+				if (localLine == startLine)
+					line = rule[1].slice(0, position.character - 1);
+				else
+					line = rule[1];
+				let has = false;
+				for (let i = line.length - 1; i > 0; i--) {
+					const ch = line[i];
+					switch (ch) {
+						case '[':
+							parens++;
+							// if found not closed []
+							if (parens === 1) i = 0;
+							break;
+						case ']':
+							parens--;
+							break;
+						case '{':
+							braces++;
+							break;
+						case '}':
+							// if found } before |
+							braces--;
+							i = 0;
+							break;
+						case '|':
+						case ':':
+							has = true;
+							i = 0;
+							break;
+						case ';':
+							/* If not inside a valid declaration */
+							i = 0;
+							localLine = -1;
+						default:
+							break;
+					}
+				}
+
+				const good = (parens === 0) && (braces === 0);
+				if (!good) {
+					break;
+				}
+
+				if (has && good) {
+					var completions: vscode.CompletionItem[] = [];
+					var completion: vscode.CompletionItem;
+					this.symbols.forEach((value, key) => {
+						completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Class)
+						completion.detail = "symbol";
+						completions.push(completion);
+					})
+					this.tokens.forEach((value, key) => {
+						completion = new vscode.CompletionItem(key, vscode.CompletionItemKind.Field)
+						completion.detail = "token";
+						completions.push(completion);
+					})
+					return completions;
+				}
+				localLine--;
+			} while (rule[0] === LineType.Rule && localLine > 0);
 		}
 		return [];
 	}
@@ -292,6 +352,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 		this.tokens.clear();
 		this.symbols.clear();
 		this.invalidRegions = [];
+		this.rulesSection = [];
 
 		const r: IParsedToken[] = [];
 		text = text.replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|\/\*[\s\S]*?\*\//mg, getEqualLengthSpaces);
@@ -404,7 +465,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 							currentPos = new vscode.Position(i, j);
 						}
 						if (this.startingLine !== -1) {
-							rulesText += ' ';
+							rulesText += ch;
 						}
 						break;
 					case '}':
@@ -416,7 +477,7 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 								unionFound = false;
 						}
 						if (this.startingLine !== -1) {
-							rulesText += ' ';
+							rulesText += ch;
 						}
 						break;
 					default:
@@ -446,12 +507,15 @@ class YaccSemanticProvider extends SemanticAnalyzer {
 			const ruleMatcher = /^[a-zA-Z0-9_]+/;
 			const rule = ruleMatcher.exec(rules[i]);
 			if (rule !== null) {
+				this.rulesSection.push([LineType.Definition, rules[i]]);
 				const symbol = this.symbols.get(rule[0]);
 				if (symbol !== undefined) {
 					this.symbols.set(rule[0], { name: rule[0], snippet: symbol.snippet, position: new vscode.Position(this.startingLine + i, 1) });
 				} else {
 					this.symbols.set(rule[0], { name: rule[0], snippet: "%type <?> " + rule[0], position: new vscode.Position(this.startingLine + i, 1) });
 				}
+			} else {
+				this.rulesSection.push([LineType.Rule, rules[i]]);
 			}
 		}
 

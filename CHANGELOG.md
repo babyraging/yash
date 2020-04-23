@@ -2,17 +2,20 @@
 
 ## UnReleased
 
+## Release
+
 ## 0.1.2
 ### Added
 - Added recognition of start condition block (lex)
 
-### Bug Fixes
-- Fixed recognition of extended nonterminal name reference (name for action section) (yacc)
-- Change \b with \s that support also tab, \n, .. (yacc)
-- Fix pattern of variables, nonterminal extension and result (yacc)
-- Fix spaces in %left, %right, %nonassoc, %token, %type (yacc)
+### Changed
+- Changed validation method for token/symbol completion
 
-## Release
+### Bug Fixes
+- Fixed recognition of extended non-terminal name reference (name for action section) (yacc)
+- Change \b with \s that support also tab, \n, .. (yacc)
+- Fix pattern of variables, non-terminal extension and result (yacc)
+- Fix spaces in %left, %right, %nonassoc, %token, %type (yacc)
 
 ## 0.1.1
 ### Added
