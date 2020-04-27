@@ -1,0 +1,390 @@
+import { createScanner } from './yaccScanner';
+import { TokenType, ProblemType, Problem, ProblemRelated, tokenTypes } from '../yaccLanguageTypes';
+import { binarySearch } from './utils';
+import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
+import { Position } from 'vscode';
+
+const predefined: { [name: string]: boolean } = {};
+predefined['UPLUS'] = true;
+predefined['UMINUS'] = true;
+predefined['POSTFIXOP'] = true;
+
+enum ParserState {
+    WaitingToken,
+    WaitingSymbol,
+    WaitingRule,
+    WaitingUnion,
+    Normal
+};
+
+export interface ISymbol {
+    terminal: boolean;
+    offset: number;
+    length: number;
+    end: number;
+    name: string;
+    type: string;
+    used: boolean;
+    definition: [number, number];
+    references: [number, number][];
+};
+
+export interface YACCDocument {
+    readonly embedded: Node[];
+    readonly nodes: Node[];
+    readonly types: { [name: string]: ISymbol };
+    readonly tokens: { [name: string]: ISymbol };
+    readonly symbols: { [name: string]: ISymbol };
+    readonly components: ISymbol[];
+    readonly rulesRange: [number, number];
+    readonly problems: Problem[];
+
+    getNodeByOffset(offset: number): Node | undefined;
+    getEmbeddedNode(offset: number): Node | undefined;
+    getSemanticTokens(getPos: (offset: number) => Position): SemanticTokenData[];
+};
+
+export enum NodeType {
+    Token,
+    Type,
+    Rule,
+    Embedded
+};
+
+export interface Node {
+    nodeType: NodeType;
+    offset: number;
+    length: number;
+    end: number;
+
+    typeOffset?: number;
+    typeEnd?: number;
+
+    actions?: string[];
+};
+
+export function parse(text: string): YACCDocument {
+    const scanner = createScanner(text);
+
+    const embedded: Node[] = [];
+    const nodes: Node[] = [];
+    const types: { [name: string]: ISymbol } = {};
+    const tokens: { [name: string]: ISymbol } = {};
+    const symbols: { [name: string]: ISymbol } = {};
+    const components: ISymbol[] = [];
+    const rulesRange: [number, number] = [-1, -1];
+    const problems: Problem[] = [];
+    const document: YACCDocument = {
+        embedded,
+        nodes,
+        types,
+        tokens,
+        symbols,
+        components,
+        rulesRange,
+        problems,
+
+        getNodeByOffset(offset: number): Node | undefined {
+            return binarySearch(this.nodes, offset, (node, offset) => offset < node.offset ? 1 : (offset > node.end ? -1 : 0))
+        },
+        getEmbeddedNode(offset: number): Node | undefined {
+            return binarySearch(this.embedded, offset, (node, offset) => offset < node.offset ? 1 : (offset > node.end ? -1 : 0))
+        },
+        getSemanticTokens(getPos: (offset: number) => Position): SemanticTokenData[] {
+            const r: SemanticTokenData[] = [];
+            for (let i = 0; i < this.components.length; i++) {
+                const component = this.components[i];
+                if (!component.terminal) {
+                    r.push({
+                        start: getPos(component.offset),
+                        length: component.length,
+                        typeIdx: SemanticTokenType.class,
+                        modifierSet: SemanticTokenModifier._
+                    });
+                } else {
+                    r.push({
+                        start: getPos(component.offset),
+                        length: component.length,
+                        typeIdx: SemanticTokenType.parameter,
+                        modifierSet: SemanticTokenModifier._
+                    });
+                }
+            }
+            return r;
+        }
+    };
+
+    function addProblem(message: string, offset: number, end: number, severity: ProblemType, related?: ProblemRelated) {
+        document.problems.push({
+            offset: offset,
+            end: end,
+            message: message,
+            type: severity,
+            related: related
+        });
+    }
+
+    function addSymbolToMap(symbols: { [name: string]: ISymbol }, terminal: boolean, offset: number, end: number, name: string, type: string) {
+        const old = symbols[name];
+        if (old) {
+            addProblem(`Symbol was already declared/defined.`, offset, end, ProblemType.Error, {
+                offset: old.offset,
+                end: old.end,
+                message: "Was declared/defined here."
+            });
+        } else {
+            symbols[name] = {
+                terminal: terminal,
+                offset: offset,
+                length: end - offset,
+                end: end,
+                name: name,
+                type: type,
+                used: false,
+                definition: [offset, end],
+                references: [[offset, end]]
+            };
+        }
+    }
+    let end = -2;
+    let state = ParserState.Normal;
+    let type = '';
+    let token = scanner.scan();
+    let offset = 0;
+    let actionOffset = 0;
+    let tokenText = '';
+    let lastNode: Node | undefined;
+    let lastToken = token;
+    while (end < 0 && token !== TokenType.EOS) {
+        offset = scanner.getTokenOffset();
+        switch (token) {
+            case TokenType.StartAction: // save the offset of the action zone
+                actionOffset = offset;
+                break;
+            case TokenType.EndAction: // save the action region
+                document.embedded.push({ nodeType: NodeType.Embedded, offset: actionOffset, length: scanner.getTokenLength(), end: scanner.getTokenEnd() });
+                break;
+            case TokenType.Action:
+                switch (state) {
+                    case ParserState.WaitingUnion: // if we are inside union, extract type information
+                        tokenText = scanner.getTokenText();
+                        const typeMatcher = /(.*[ \t\f*&])([a-zA-Z0-9_]+)\s*;/g;
+                        var res;
+                        while ((res = typeMatcher.exec(tokenText)) !== null) {
+                            const typeOffset = offset + res.index;
+                            const typeEnd = offset + res.index + res[0].length;
+                            addSymbolToMap(document.types, true, typeOffset, typeEnd, res[2], res[1].replace(/\s*/g, ""));
+                        }
+                        state = ParserState.Normal;
+                        break;
+                    case ParserState.WaitingRule: // if we are inside a rule, save the code
+                        if (lastNode && lastNode.actions) {
+                            lastNode.actions.push(scanner.getTokenText());
+                        }
+                        break;
+                }
+                break;
+            case TokenType.Option:
+                // save the last node
+                if (state !== ParserState.WaitingRule && lastNode !== undefined) {
+                    lastNode.end = offset - 1;
+                    lastNode.length = lastNode.end - lastNode.offset;
+                    document.nodes.push(lastNode);
+                    type = '';
+                    lastNode = undefined;
+                    state = ParserState.Normal;
+                }
+                tokenText = scanner.getTokenText();
+                switch (tokenText) {
+                    case '%union':
+                        state = ParserState.WaitingUnion;
+                        break;
+                    case '%token':
+                        lastNode = { nodeType: NodeType.Token, offset: offset, length: -1, end: -1 }
+                        state = ParserState.WaitingToken;
+                        break;
+                    case '%type':
+                        lastNode = { nodeType: NodeType.Type, offset: offset, length: -1, end: -1 }
+                        state = ParserState.WaitingSymbol;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case TokenType.StartType:
+                type = ''
+                if (lastNode)
+                    lastNode.typeOffset = scanner.getTokenOffset();
+                break;
+            case TokenType.EndType:
+                if (lastNode)
+                    lastNode.typeEnd = scanner.getTokenOffset();
+                break;
+            case TokenType.TypeValue:
+                // extract the type inside the tag <[type]>
+                type = scanner.getTokenText();
+                const t = document.types[type];
+                if (t) {
+                    t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
+                } else {
+                    addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                }
+                break;
+            case TokenType.RulesTag:
+                // start of the rule section
+                if (lastNode !== undefined) {
+                    lastNode.end = offset - 1;
+                    lastNode.length = lastNode.end - lastNode.offset;
+                    document.nodes.push(lastNode);
+                    lastNode = undefined;
+                    type = '';
+                }
+                document.rulesRange[end === -2 ? 0 : 1] = offset;
+                end++;
+                state = ParserState.WaitingRule;
+                break;
+            case TokenType.Word:
+                const word = scanner.getTokenText();
+                switch (state) {
+                    case ParserState.Normal:
+                        break;
+                    case ParserState.WaitingToken:
+                        addSymbolToMap(document.tokens, true, offset, scanner.getTokenEnd(), word, type);
+                        break;
+                    case ParserState.WaitingSymbol:
+                        addSymbolToMap(document.symbols, true, offset, scanner.getTokenEnd(), word, type);
+                        break;
+                    case ParserState.WaitingRule:
+                        document.components.push({
+                            terminal: true,
+                            offset: offset,
+                            length: scanner.getTokenLength(),
+                            end: scanner.getTokenEnd(),
+                            name: scanner.getTokenText(),
+                            type: '',
+                            used: true,
+                            definition: [-1, -1],
+                            references: [[offset, scanner.getTokenEnd()]]
+                        });
+                        break;
+                    default:
+                        addProblem(`Unexpected symbol ${word}`, offset, scanner.getTokenEnd(), ProblemType.Error);
+                }
+                break;
+            case TokenType.Colon:
+                switch (state) {
+                    case ParserState.WaitingRule: // we maybe found a new non-terminal symbol definition
+                        if (lastToken !== TokenType.Word) {
+                            addProblem(`Unexpected ':' you can only declare a non-terminal with a word.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                            break;
+                        }
+                        const nonTerminal = document.components.pop(); // the last symbol was not part of last rule
+                        if (nonTerminal !== undefined) { // I think the array will never be empty, but check for sanity
+                            if (lastNode !== undefined) { // Last rule finished
+                                lastNode.end = nonTerminal.offset - 1;
+                                lastNode.length = lastNode.end - lastNode.offset;
+                                document.nodes.push(lastNode);
+                            }
+                            nonTerminal.terminal = false; // this will not be a terminal
+                            nonTerminal.definition = [nonTerminal.offset, nonTerminal.end]; // is defined here
+                            const symbol = document.symbols[nonTerminal.name];
+                            if (symbol !== undefined) { // if the symbol was previously declared with %type ...
+                                if (!symbol.terminal) { // there is a redefinition of the symbol
+                                    addProblem(`Non-terminal symbol was already declared.`, nonTerminal.offset, nonTerminal.end, ProblemType.Error, {
+                                        offset: symbol.offset,
+                                        end: symbol.end,
+                                        message: "Was declared here."
+                                    });
+                                }
+                                nonTerminal.references.push(symbol.references[0]); // add %type reference
+                                nonTerminal.type = symbol.type; // assign the type from %type
+                                symbol.references = nonTerminal.references; // update also the old references
+                            }
+                            const token = document.tokens[nonTerminal.name];
+                            if (token !== undefined) { // if the symbol was already declared as a token
+                                addProblem(`Symbol was already declared as a token.`, nonTerminal.offset, nonTerminal.end, ProblemType.Error, {
+                                    offset: token.offset,
+                                    end: token.end,
+                                    message: "Was declared here."
+                                });
+                            }
+                            document.symbols[nonTerminal.name] = nonTerminal; // update symbol table
+                            lastNode = { nodeType: NodeType.Rule, offset: nonTerminal.offset, length: -1, end: -1, actions: [] }
+                        }
+                        break;
+                    default:
+                        addProblem(`Unexpected : character`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                        break;
+                }
+                break;
+            case TokenType.SemiColon:
+            case TokenType.StartComment:
+            case TokenType.EndComment:
+            case TokenType.Comment:
+            case TokenType.Param:
+            case TokenType.Literal:
+                break;
+            case TokenType.Bar:
+                if (state !== ParserState.WaitingRule) {
+                    addProblem(`Unexpected | symbol.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                }
+                break;
+            default:
+                // TODO: better problem detection with unexpected symbols
+                if (state === ParserState.WaitingRule)
+                    addProblem(`Unknown symbol ${scanner.getTokenText()}.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                break;
+        }
+        lastToken = token;
+        token = scanner.scan();
+    }
+
+    for (let i = 0; i < document.components.length; i++) {
+        const component = document.components[i];
+        let symbol: ISymbol;
+        if ((symbol = document.symbols[component.name])) {
+            component.terminal = false;
+            component.definition = symbol.definition;
+            component.type = symbol.type;
+            component.references = symbol.references;
+            symbol.references.push([component.offset, component.end]);
+        } else if ((symbol = document.tokens[component.name])) {
+            component.definition = symbol.definition;
+            component.type = symbol.type;
+            component.references = symbol.references;
+            symbol.references.push([component.offset, component.end]);
+            symbol.used = true;
+        } else if (!predefined[component.name]) {
+            document.problems.push({
+                offset: component.offset,
+                end: component.end,
+                message: 'Symbol was not declared.',
+                type: ProblemType.Error
+            });
+        }
+    }
+
+    Object.keys(document.tokens).forEach(key => {
+        const component = document.tokens[key];
+        if (!component.used) {
+            addProblem('Token declared but never used.',
+                component.offset,
+                component.end,
+                ProblemType.Warning
+            )
+        }
+    });
+
+    Object.keys(document.symbols).forEach(key => {
+        if (document.symbols[key].definition[0] < document.rulesRange[0]) {
+            addProblem('Non-terminal symbol type defined but never declared.',
+                document.symbols[key].offset,
+                document.symbols[key].end,
+                ProblemType.Warning
+            )
+            delete document.symbols[key];
+        }
+    });
+
+    return document
+}

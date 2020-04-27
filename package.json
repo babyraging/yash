@@ -2,10 +2,11 @@
     "name": "yash",
     "displayName": "Yash",
     "description": "Yet another syntax highlighter for lex/yacc & flex/bison.",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "engines": {
         "vscode": "^1.44.0"
     },
+    "license": "MIT",
     "publisher": "daohong-emilio",
     "icon": "assets/logo.png",
     "repository": {

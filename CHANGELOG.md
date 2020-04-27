@@ -4,6 +4,24 @@
 
 ## Release
 
+## 0.2.0 27/04/2020
+### Added
+- Added lex/yacc parsers and language services
+- Added feature: basic diagnostics support (lex/yacc)
+- Added feature: rename symbol support (lex/yacc)
+- Added feature: find references support (lex/yacc)
+  
+### Changed
+- Architectural changing, now uses language service pattern
+- Better completion handling/detection (lex/yacc)
+- General optimization 
+  - parsing time 3x less than before
+  - binary search to detect C code region, computation time reduced from O(n) to O(log(n))
+- Updated README.md
+
+### Bug Fixes
+- Minor bug fixes related to completion handling/detection
+
 ## 0.1.2
 ### Added
 - Added recognition of start condition block (lex)
@@ -42,7 +60,6 @@
 - Fixed nested C block detection, better implementation (lex/yacc)
 - Fixed a bug on wrong detection of tokens (yacc) 
 - Fixed recognition of comment in %type, keywords, keywords-block, rules (yacc)
-
 
 ## 0.0.7
 ### Added
