@@ -37,6 +37,7 @@ export const _SQO = '\''.charCodeAt(0);
 export const _SBO = '['.charCodeAt(0);
 export const _SBC = ']'.charCodeAt(0);
 export const _SCL = ';'.charCodeAt(0);
+export const _AND = '&'.charCodeAt(0);
 
 /**
  * Imported form Microsoft's vscode-html-languageservice's scanner.

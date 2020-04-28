@@ -1,6 +1,7 @@
-import { createScanner } from './yaccScanner';
-import { TokenType, ProblemType, Problem, ProblemRelated, tokenTypes } from '../yaccLanguageTypes';
 import { binarySearch } from './utils';
+import { createScanner } from './yaccScanner';
+import { parse as parseUnion, YYType } from './unionParser';
+import { TokenType, ProblemType, Problem, ProblemRelated } from '../yaccLanguageTypes';
 import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
 import { Position } from 'vscode';
 
@@ -168,13 +169,21 @@ export function parse(text: string): YACCDocument {
                 switch (state) {
                     case ParserState.WaitingUnion: // if we are inside union, extract type information
                         tokenText = scanner.getTokenText();
-                        const typeMatcher = /(.*[ \t\f*&])([a-zA-Z0-9_]+)\s*;/g;
-                        var res;
-                        while ((res = typeMatcher.exec(tokenText)) !== null) {
-                            const typeOffset = offset + res.index;
-                            const typeEnd = offset + res.index + res[0].length;
-                            addSymbolToMap(document.types, true, typeOffset, typeEnd, res[2], res[1].replace(/\s*/g, ""));
-                        }
+                        const yytypes = parseUnion(tokenText);
+                        yytypes.forEach(t => {
+                            if (t.name) {
+                                const typeOffset = offset + t.location[0];
+                                const typeEnd = offset + t.location[1];
+                                addSymbolToMap(document.types, true, typeOffset, typeEnd, t.name, t.info);
+                            }
+                        });
+                        // const typeMatcher = /(.*[ \t\f*&])([a-zA-Z0-9_]+)\s*;/g;
+                        // var res;
+                        // while ((res = typeMatcher.exec(tokenText)) !== null) {
+                        //     const typeOffset = offset + res.index;
+                        //     const typeEnd = offset + res.index + res[0].length;
+                        //     addSymbolToMap(document.types, true, typeOffset, typeEnd, res[2], res[1].replace(/\s*/g, ""));
+                        // }
                         state = ParserState.Normal;
                         break;
                     case ParserState.WaitingRule: // if we are inside a rule, save the code

@@ -19,7 +19,7 @@ export interface Problem {
 };
 
 export enum TokenType {
-    Component,
+    Word,
     Literal,
     Bar,
     Percent,

@@ -51,7 +51,7 @@ enum ParserState {
     WithinCode,
 };
 
-export function parse(text: string): LexDocument {
+export function parse(text: string, state: ParserState = ParserState.WaitingDecl): LexDocument {
     const scanner = createScanner(text);
     const embedded: Code[] = [];
     const rulesRange: [number, number] = [-1, -1];
@@ -104,13 +104,14 @@ export function parse(text: string): LexDocument {
     }
 
     let end = -2;
-    let state = ParserState.WaitingDecl;
+    // let state = ParserState.WaitingDecl;
     let type = '';
     let token = scanner.scan();
     let offset = 0;
     let codeOffset = 0;
     let tokenText = '';
     let acceptingStates = false;
+    let lastToken = token;
     while (end < 0 && token !== TokenType.EOS) {
         offset = scanner.getTokenOffset();
         switch (token) {
@@ -138,7 +139,7 @@ export function parse(text: string): LexDocument {
         switch (state) {
             case ParserState.WaitingDecl:
                 switch (token) {
-                    case TokenType.Component:
+                    case TokenType.Word:
                         addSymbol(document.defines, scanner.getTokenText(), scanner.getTokenOffset(), scanner.getTokenEnd());
                         scanner.disableMultiLineBrackets();
                         state = ParserState.WaitingDef;
@@ -187,7 +188,7 @@ export function parse(text: string): LexDocument {
                         state = ParserState.WaitingDecl;
                         acceptingStates = false;
                         break;
-                    case TokenType.Component:
+                    case TokenType.Word:
                         if (acceptingStates)
                             addSymbol(document.states, scanner.getTokenText(), scanner.getTokenOffset(), scanner.getTokenEnd());
                         break;
@@ -196,11 +197,11 @@ export function parse(text: string): LexDocument {
             case ParserState.WaitingRule:
                 switch (token) {
                     case TokenType.Literal:
-                    case TokenType.Component:
+                    case TokenType.Word:
                         break;
                     case TokenType.Predefined:
                         break;
-                    case TokenType.States:
+                    case TokenType.States: // found initial states
                         tokenText = scanner.getTokenText();
                         const matcher = /\w+/g;
                         var match;
@@ -218,9 +219,9 @@ export function parse(text: string): LexDocument {
                             });
                         }
                         break;
-                    case TokenType.Action:
+                    case TokenType.Action: // found using user defined definition
                         tokenText = scanner.getTokenText();
-                        if (/^\w+$/.test(tokenText))
+                        if (/^\w+$/.test(tokenText)) { // if {word}
                             document.components.push({
                                 name: scanner.getTokenText(),
                                 offset: offset,
@@ -230,6 +231,31 @@ export function parse(text: string): LexDocument {
                                 definition: [-1, -1],
                                 references: [[offset, scanner.getTokenEnd()]]
                             });
+                        } else {
+                            /**
+                             * If initial state scope
+                             * <state>{
+                             * 
+                             * {word}   ....
+                             * {abc}    ....
+                             * 
+                             * }
+                             */
+                            const recursive = parse(tokenText, ParserState.WaitingRule);
+                            recursive.components.forEach(c => {
+                                c.offset += offset;
+                                c.end += offset;
+                                c.references[0][0] += offset;
+                                c.references[0][1] += offset;
+                                document.components.push(c);
+                            });
+                            recursive.embedded.forEach(code => {
+                                code.offset += offset;
+                                code.end += offset;
+                                document.embedded.push(code);
+                            });
+                            console.log(recursive);
+                        }
                         break;
                     case TokenType.Divider:
                         state = ParserState.WaitingAction;
@@ -259,6 +285,7 @@ export function parse(text: string): LexDocument {
                 }
                 break;
         }
+        lastToken = token;
         token = scanner.scan();
     }
 

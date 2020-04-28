@@ -9,7 +9,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
     let tokenError: string | undefined;
     let multiLineBracket: boolean = true;
 
-    function nextComponent(): string {
+    function nextWord(): string {
         return stream.advanceIfRegExp(/^[a-zA-Z]\w*/);
     }
 
@@ -123,9 +123,9 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
 
                 stream.goBack(1);
 
-                const component = nextComponent();
+                const component = nextWord();
                 if (component.length > 0) {
-                    return finishToken(offset, TokenType.Component);
+                    return finishToken(offset, TokenType.Word);
                 }
 
                 stream.advance(1);
