@@ -71,12 +71,19 @@
             {
                 "language": "lex",
                 "scopeName": "source.l",
-                "path": "./syntaxes/lex.tmLanguage.json"
+                "path": "./syntaxes/lex.tmLanguage.json",
+                "embeddedLanguages": {
+                    "entity.block.lex": "cpp"
+                }
             },
             {
                 "language": "yacc",
                 "scopeName": "source.y",
-                "path": "./syntaxes/yacc.tmLanguage.json"
+                "path": "./syntaxes/yacc.tmLanguage.json",
+                "embeddedLanguages": {
+                    "entity.prologue.yacc": "cpp",
+                    "entity.action.yacc": "cpp"
+                }
             }
         ]
     },
