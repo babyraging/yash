@@ -59,10 +59,10 @@
 							"include": "#comments"
 						},
 						{
-							"include": "#strings"
+							"include": "#brackets"
 						},
 						{
-							"include": "#brackets"
+							"include": "#strings"
 						},
 						{
 							"include": "#block"
@@ -289,11 +289,11 @@
 		},
 		"brackets": {
 			"name":"entity.name.function.lex",
-			"match": "(?<=[^\\\\]|^)\\[(?:[^\\[\\]\\\n]|\\.)*\\]"
+			"match": "(?<=[^\\\\]|^)\\[(?:[^\\[\\]]|\\\\.)*\\]"
 		},
 		"strings": {
 			"name": "string.quoted.double.lex",
-			"match": "(?<=[^\\\\]|^)\"(?:[^\"\\\\\\n]|\\\\.)*\""
+			"match": "(?<=[^\\\\]|^)\"(?:[^\"\\\\]|\\\\.)*\""
 		},
 		"predefined": {
 			"name": "keyword.lex",

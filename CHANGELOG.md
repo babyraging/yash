@@ -2,19 +2,20 @@
 
 ## UnReleased
 
+## Release
+
 ## 0.2.1
 ### Added
 - Added support for initial state scope (lex)
 
 ### Changed
 - Now uses a parser to parse the %union types instead of regex (yacc)
+- Modified README.md
 
 ### Bug fixes
-- Fixed wrong string highlight when quotes are escaped (lex)
+- Fixed wrong string highlight when quotes are escaped. Issue #1 (lex)
 - Fixed wrong type detection in the %union scope (yacc)
 - Fixed an hover issue when the non-terminal name is the same as a typename (yacc) 
-
-## Release
 
 ## 0.2.0 27/04/2020
 ### Added

@@ -34,7 +34,7 @@ You can find more previews here [previews](images/README.md).
 
 Since 1.43.0 VSCode enabled a new feature called Semantic Highlighting, this extension supports it. 
 
-By default, only the built-in themes has semantic highlighting enabled, so if you are using a 3rd party theme for example [Dracula](https://github.com/dracula/visual-studio-code/) which doesn't support the semantic coloring yet, you have to add these lines to your `settings.json` file to have the feature enabled. 
+By default, only the built-in themes has semantic highlighting enabled, so if you are using a 3rd party theme that doesn't support the semantic coloring yet, you have to add these lines to your `settings.json` file to have the feature enabled. 
 ```json
 "editor.tokenColorCustomizations": {
 	"[name of the theme]": {

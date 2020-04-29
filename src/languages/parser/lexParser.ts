@@ -254,7 +254,6 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                                 code.end += offset;
                                 document.embedded.push(code);
                             });
-                            console.log(recursive);
                         }
                         break;
                     case TokenType.Divider:

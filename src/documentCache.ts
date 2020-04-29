@@ -42,10 +42,7 @@ export function CreateDocumentCache<T>(maxEntries: number, cleanupIntervalTimeIn
                 return languageModelInfo.languageModel;
             }
 
-            const t0 = Date.now();
             const languageModel = parse(document);
-            const t1 = Date.now();
-            console.log(`Parsing time ${t1 - t0}`);
             languageModels[document.uri.toString()] = { languageModel, version, languageId, cTime: Date.now() };
             if (!languageModelInfo) {
                 nModels++;

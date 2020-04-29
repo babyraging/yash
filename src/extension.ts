@@ -22,7 +22,6 @@ export function activate(context: vscode.ExtensionContext) {
 					return { isIncomplete: true, items: [] };
 				}
 				const doComplete = mode.doComplete!;
-				console.log('complete')
 				return doComplete(document, position);
 			}, null, `Error while computing completion for ${document.uri.toString()}`, token);
 		}
