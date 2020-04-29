@@ -9,6 +9,7 @@ import { doYACCFindDefinition } from './services/yaccDefinitions';
 import { doYACCFindReferences } from './services/yaccReferences';
 import { doYACCRename } from './services/yaccRename';
 import { doYACCValidation } from './services/yaccValidation';
+import { doYACCFindTypeDefinition } from './services/yaccTypeDefinition';
 
 export interface LanguageService {
     createScanner(input: string, initialOffset?: number): Scanner;
@@ -17,6 +18,7 @@ export interface LanguageService {
     doValidation: (document: TextDocument, yaccDocument: YACCDocument) => Diagnostic[];
     getSemanticTokens(Document: TextDocument, yaccDocument: YACCDocument): SemanticTokenData[];
     doHover(document: TextDocument, position: Position, yaccDocument: YACCDocument): Hover | null;
+    findTypeDefinition(document: TextDocument, position: Position, yaccDocument: YACCDocument): Definition | null;
     findDefinition(document: TextDocument, position: Position, yaccDocument: YACCDocument): Definition | null;
     findReferences(document: TextDocument, position: Position, yaccDocument: YACCDocument): Location[];
     doRename(document: TextDocument, position: Position, newName: string, yaccDocument: YACCDocument): WorkspaceEdit | null;
@@ -30,6 +32,7 @@ export function getLanguageService(): LanguageService {
         doValidation: (document, yaccDocument) => doYACCValidation(document, yaccDocument),
         getSemanticTokens: (document, yaccDocument) => yaccDocument.getSemanticTokens(document.positionAt.bind(document)),
         doHover: (document, position, yaccDocument) => doYACCHover(document, position, yaccDocument),
+        findTypeDefinition: (document, position, yaccDocument) => doYACCFindTypeDefinition(document, position, yaccDocument),
         findDefinition: (document, position, yaccDocument) => doYACCFindDefinition(document, position, yaccDocument),
         findReferences: (document, position, yaccDocument) => doYACCFindReferences(document, position, yaccDocument),
         doRename: (document, position, newName, yaccDocument) => doYACCRename(document, position, newName, yaccDocument)

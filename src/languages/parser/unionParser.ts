@@ -42,7 +42,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
     let tokenError: string | undefined;
 
     function nextWord(): string {
-        return stream.advanceIfRegExp(/^\w+/);
+        return stream.advanceIfRegExp(/^[a-zA-Z]\w*/);
     }
 
     function finishToken(offset: number, type: TokenType, errorMessage?: string): TokenType {
@@ -206,6 +206,7 @@ export function parse(text: string): YYType[] {
                 break;
             case TokenType.Word:
                 if (type !== undefined) {
+                    console.log(scanner.getTokenText());
                     type.type.push(scanner.getTokenText());
                 } else {
                     type = { type: [scanner.getTokenText()], info: '', location: [offset, -1] }

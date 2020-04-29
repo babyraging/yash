@@ -2,6 +2,26 @@
 
 ## UnReleased
 
+## 0.2.2
+
+### Added
+- Added feature: find type definition support (yacc)
+- Added more file extensions support according to <https://www.gnu.org/software/automake/manual/html_node/Yacc-and-Lex.html>
+  - .yy
+  - .y++
+  - .yxx
+  - .ypp
+  - .ll
+  - .l++
+  - .lxx
+  - .lpp
+
+### Changed
+- Change dollars syntax scope naming
+
+### Bug fixes
+- Fixed unable to detect int name[100]; variable name pattern.
+
 ## Release
 
 ## 0.2.1

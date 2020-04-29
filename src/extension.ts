@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { newSemanticTokenProvider } from './modes/semanticProvider';
 import { getLanguageModes } from './modes/languageModes';
-import { runSafe, formatError } from './runner';
+import { runSafe } from './runner';
 const pendingValidationRequests: { [uri: string]: NodeJS.Timer } = {};
 const validationDelayMs = 500;
 
@@ -36,6 +36,18 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				return mode.doHover(document, position);
 			}, null, `Error while computing hover for ${document.uri.toString()}`, token);
+		}
+	}));
+
+	context.subscriptions.push(vscode.languages.registerTypeDefinitionProvider(selector, {
+		async provideTypeDefinition(document, position, token): Promise<vscode.Location | vscode.Location[] | null> {
+			return runSafe(() => {
+				const mode = languageModes.getMode(document.languageId);
+				if (!mode || !mode.findTypeDefinition) {
+					return null;
+				}
+				return mode.findTypeDefinition(document, position);
+			}, null, `Error while computing find type definition for ${document.uri.toString()}`, token);
 		}
 	}));
 

@@ -32,8 +32,12 @@
                     "flex"
                 ],
                 "extensions": [
-                    ".fl",
-                    ".l"
+                    ".l",
+                    ".ll",
+                    ".l++",
+                    ".lxx",
+                    ".lpp",
+                    ".fl"
                 ],
                 "configuration": "./lex-configuration.json"
             },
@@ -47,6 +51,10 @@
                 ],
                 "extensions": [
                     ".y",
+                    ".yy",
+                    ".y++",
+                    ".yxx",
+                    ".ypp",
                     ".yacc"
                 ],
                 "configuration": "./yacc-configuration.json"

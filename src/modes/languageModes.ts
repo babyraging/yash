@@ -36,6 +36,7 @@ export interface LanguageMode {
     findDocumentHighlight?: (document: TextDocument, position: Position) => DocumentHighlight[];
     // findDocumentSymbols?: (document: TextDocument) => SymbolInformation[];
     // findDocumentLinks?: (document: TextDocument, documentContext: DocumentContext) => DocumentLink[];
+    findTypeDefinition?: (document: TextDocument, position: Position) => Definition | null;
     findDefinition?: (document: TextDocument, position: Position) => Definition | null;
     findReferences?: (document: TextDocument, position: Position) => Location[];
     format?: (document: TextDocument, range: Range, options: FormattingOptions, ) => TextEdit[];
@@ -43,9 +44,9 @@ export interface LanguageMode {
     // getColorPresentations?: (document: TextDocument, color: Color, range: Range) => ColorPresentation[];
     // doAutoClose?: (document: TextDocument, position: Position) => string | null;
     // getFoldingRanges?: (document: TextDocument) => FoldingRange[];
-    onDocumentRemoved(document: TextDocument): void;
     getSemanticTokens?(document: TextDocument): SemanticTokenData[];
     getSemanticTokenLegend?(): { types: string[], modifiers: string[] };
+    onDocumentRemoved(document: TextDocument): void;
     dispose(): void;
 }
 

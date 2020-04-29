@@ -24,6 +24,10 @@ export function getYACCMode(yaccLanguageService: YACCLanguageService): LanguageM
             const yacc = cache.get(document);
             return yaccLanguageService.doHover(document, position, yacc);
         },
+        findTypeDefinition(document: TextDocument, position: Position): Definition | null {
+            const yacc = cache.get(document);
+            return yaccLanguageService.findTypeDefinition(document, position, yacc);
+        },
         findDefinition(document: TextDocument, position: Position): Definition | null {
             const yacc = cache.get(document);
             return yaccLanguageService.findDefinition(document, position, yacc);
