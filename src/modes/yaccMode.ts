@@ -1,7 +1,7 @@
 import { LanguageService as YACCLanguageService } from '../languages/yaccLanguageServices';
 import { tokenTypes, tokenModifiers } from '../languages/yaccLanguageTypes';
 import { LanguageMode } from './languageModes';
-import { TextDocument, CompletionList, CompletionItem, Position, Hover, Definition, Location, WorkspaceEdit, Diagnostic, TextEdit } from 'vscode';
+import { TextDocument, CompletionList, CompletionItem, Position, Hover, Definition, Location, WorkspaceEdit, Diagnostic, TextEdit, FormattingOptions, Range } from 'vscode';
 import { SemanticTokenData } from '../languages/semanticTokens';
 import { CreateDocumentCache } from '../documentCache';
 import { YACCDocument } from '../languages/parser/yaccParser';
@@ -40,9 +40,9 @@ export function getYACCMode(yaccLanguageService: YACCLanguageService): LanguageM
             const yacc = cache.get(document);
             return yaccLanguageService.doRename(document, position, newName, yacc);
         },
-        doFormat(document: TextDocument, position: Position): TextEdit[] {
+        format(document: TextDocument, range: Range, options: FormattingOptions): TextEdit[] {
             const yacc = cache.get(document);
-            return yaccLanguageService.doFormat(document, position, yacc);
+            return yaccLanguageService.format(document, range, options, yacc);
         },
         getSemanticTokens(document: TextDocument): SemanticTokenData[] {
             const yacc = cache.get(document);
