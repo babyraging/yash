@@ -107,6 +107,20 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
+	context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(selector, {
+		async provideDocumentFormattingEdits(document, options, token): Promise<vscode.TextEdit[] | null> {
+			return runSafe(() => {
+				const mode = languageModes.getMode(document.languageId);
+				if (!mode || !mode.format) {
+					return null;
+				}
+				const allRange = new vscode.Range(document.positionAt(0), new vscode.Position(document.lineCount,0));
+				console.log(allRange)
+				return mode.format(document, allRange, options);
+			}, null, `Error while formatting for ${document.uri.toString()}`, token);
+		}
+	}));
+
 	// The content of a text document has changed. 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(change => {
 		triggerValidation(change.document);
