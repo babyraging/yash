@@ -39,7 +39,7 @@ export function doLEXCompletion(document: TextDocument, position: Position, lexD
             })
         }
     } else if (offset < lexDocument.rulesRange[1]) {
-        const res = line.match(/^(?:{[a-zA-Z0-9_]*}?)+$/);
+        const res = line.match(/^[^\s]*(?:{\w*}?)+$/);
         if (res) {
             if (res[0].length >= position.character) {
                 Object.keys(lexDocument.defines).forEach((key) => {
@@ -50,7 +50,7 @@ export function doLEXCompletion(document: TextDocument, position: Position, lexD
                 })
             }
         } else {
-            if (line.match(/^<[\w,]*>(?:{[a-zA-Z0-9_]*}?)+$/)) {
+            if (line.match(/^<[\w,]*>[^\s]*(?:{\w*}?)+$/)) {
                 Object.keys(lexDocument.defines).forEach((key) => {
                     const completion = new CompletionItem(key);
                     completion.detail = "definition";

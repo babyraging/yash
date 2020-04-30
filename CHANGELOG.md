@@ -2,20 +2,22 @@
 
 ## UnReleased
 
+## Release
+
 ## 0.2.3
 
 ### Added
-- Adde override predefined symbol error (yacc)
+- Added override predefined symbol detection (yacc)
 
 ### Changed
 - Changed default value for rules region range (lex/yacc)
+- Changed lex completion rule, now supports more cases (lex)
+- Now keywords have different color (yacc)
 
 ### Bug fixes
 - Fixed wrongly detect regex quantifier {1, 2} as symbol (lex)
 - Fixed missing `error` predefined symbol to yacc (yacc)
 - Fixed escaped {}s detection (flex)
-
-## Release
 
 ## 0.2.2
 

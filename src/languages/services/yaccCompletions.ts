@@ -3,9 +3,9 @@ import { YACCDocument, NodeType } from '../parser/yaccParser';
 import { createScanner } from '../parser/yaccScanner';
 import { TokenType } from '../yaccLanguageTypes';
 
-const keywords = ['type', 'option', 'token', 'left', 'right', 'define', 'output',
-    'precedence', 'nterm', 'destructor', 'union', 'code', 'printer',
-    'parse-param', 'lex-param', 'pure-parser', 'expect', 'name-prefix', 'locations', 'nonassoc'];
+const keywords = ['type', 'token', 'option', 'token-table', 'left', 'right', 'define', 'output',
+    'precedence', 'nterm', 'destructor', 'union', 'code', 'printer', 'defines', 'start', 'skeleton', 'glr-parser', 'language',
+    'parse-param', 'lex-param', 'pure-parser', 'expect', 'expect-rr', 'name-prefix', 'locations', 'nonassoc'];
 
 export function doYACCComplete(document: TextDocument, position: Position, yaccDocument: YACCDocument): CompletionItem[] | CompletionList {
     const offset = document.offsetAt(position);
