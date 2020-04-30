@@ -7,13 +7,13 @@
 ## 0.2.3
 
 ### Added
-- Added override predefined symbol detection (yacc)
+- Added override predefined symbols detection (yacc)
 - Added predefined symbols to completion (yacc)
 
 ### Changed
 - Changed default value for rules region range (lex/yacc)
 - Changed lex completion rule, now supports more cases (lex)
-- Now keywords have different color (yacc)
+- Now predefined symbols have different color (yacc)
 
 ### Bug fixes
 - Fixed wrongly detect regex quantifier {1, 2} as symbol (lex)
