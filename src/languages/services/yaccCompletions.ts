@@ -1,5 +1,5 @@
 import { TextDocument, CompletionList, CompletionItem, CompletionItemKind, Position } from 'vscode';
-import { YACCDocument, NodeType } from '../parser/yaccParser';
+import { YACCDocument, NodeType, predefined } from '../parser/yaccParser';
 import { createScanner } from '../parser/yaccScanner';
 import { TokenType } from '../yaccLanguageTypes';
 
@@ -51,7 +51,7 @@ export function doYACCComplete(document: TextDocument, position: Position, yaccD
             if (node.nodeType === NodeType.Type)
                 Object.keys(yaccDocument.symbols).forEach((symbol) => {
                     completion = new CompletionItem(symbol)
-                    completion.detail = "symbol";
+                    completion.detail = "user defined non-terminal";
                     completion.kind = CompletionItemKind.Class;
                     result.push(completion);
                 });
@@ -59,16 +59,22 @@ export function doYACCComplete(document: TextDocument, position: Position, yaccD
         case NodeType.Rule:
             Object.keys(yaccDocument.symbols).forEach((symbol) => {
                 completion = new CompletionItem(symbol)
-                completion.detail = "symbol";
+                completion.detail = "user defined non-terminal";
                 completion.kind = CompletionItemKind.Class;
                 result.push(completion);
-            })
+            });
             Object.keys(yaccDocument.tokens).forEach((token) => {
                 completion = new CompletionItem(token)
-                completion.detail = "token";
+                completion.detail = "user defined token";
                 completion.kind = CompletionItemKind.Field;
                 result.push(completion);
-            })
+            });
+            Object.keys(predefined).forEach(key => {
+                completion = new CompletionItem(key)
+                completion.detail = "predefined symbol";
+                completion.kind = CompletionItemKind.Method;
+                result.push(completion);
+            });
             break;
         default:
             break;

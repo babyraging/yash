@@ -8,6 +8,7 @@
 
 ### Added
 - Added override predefined symbol detection (yacc)
+- Added predefined symbols to completion (yacc)
 
 ### Changed
 - Changed default value for rules region range (lex/yacc)
