@@ -54,7 +54,7 @@ enum ParserState {
 export function parse(text: string, state: ParserState = ParserState.WaitingDecl): LexDocument {
     const scanner = createScanner(text);
     const embedded: Code[] = [];
-    const rulesRange: [number, number] = [-1, -1];
+    const rulesRange: [number, number] = [0, text.length];
     const defines: { [name: string]: ISymbol } = {};
     const states: { [name: string]: ISymbol } = {};
     const components: ISymbol[] = [];
@@ -227,7 +227,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                         break;
                     case TokenType.Action: // found using user defined definition
                         tokenText = scanner.getTokenText();
-                        if (/^\w+$/.test(tokenText)) { // if {word}
+                        if (/^[a-zA-Z]\w*$/.test(tokenText)) { // if {word}
                             document.components.push({
                                 name: scanner.getTokenText(),
                                 offset: offset,
@@ -237,6 +237,8 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                                 definition: [-1, -1],
                                 references: [[offset, scanner.getTokenEnd()]]
                             });
+                        } else if (/^\d+(,\s*\d+){0,1}$$/.test(tokenText)) { // if {5}, {2,3}
+                            // do nothing
                         } else if (isConditionScope) {
                             /**
                              * If initial state scope
@@ -247,7 +249,6 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                              * 
                              * }
                              */
-                            console.log("condition scope");
                             const recursive = parse(tokenText, ParserState.WaitingRule);
                             recursive.components.forEach(c => {
                                 c.offset += offset;

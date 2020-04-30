@@ -2,6 +2,18 @@
 
 ## UnReleased
 
+## 0.2.3
+
+### Added
+- Adde override predefined symbol error (yacc)
+
+### Changed
+- Changed default value for rules region range (lex/yacc)
+
+### Bug fixes
+- Fixed wrongly detect regex quantifier {1, 2} as symbol (lex)
+- Fixed missing `error` predefined symbol to yacc (yacc)
+
 ## Release
 
 ## 0.2.2

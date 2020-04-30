@@ -6,10 +6,11 @@ import { ProblemType, Problem, ProblemRelated } from '../common';
 import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
 import { Position } from 'vscode';
 
-const predefined: { [name: string]: boolean } = {};
+export const predefined: { [name: string]: boolean } = {};
 predefined['UPLUS'] = true;
 predefined['UMINUS'] = true;
 predefined['POSTFIXOP'] = true;
+predefined['error'] = true;
 
 enum ParserState {
     WaitingToken,
@@ -74,7 +75,7 @@ export function parse(text: string): YACCDocument {
     const tokens: { [name: string]: ISymbol } = {};
     const symbols: { [name: string]: ISymbol } = {};
     const components: ISymbol[] = [];
-    const rulesRange: [number, number] = [-1, -1];
+    const rulesRange: [number, number] = [0, text.length];
     const problems: Problem[] = [];
     const document: YACCDocument = {
         embedded,
@@ -96,21 +97,18 @@ export function parse(text: string): YACCDocument {
             const r: SemanticTokenData[] = [];
             for (let i = 0; i < this.components.length; i++) {
                 const component = this.components[i];
-                if (!component.terminal) {
-                    r.push({
-                        start: getPos(component.offset),
-                        length: component.length,
-                        typeIdx: SemanticTokenType.class,
-                        modifierSet: SemanticTokenModifier._
-                    });
-                } else {
-                    r.push({
-                        start: getPos(component.offset),
-                        length: component.length,
-                        typeIdx: SemanticTokenType.parameter,
-                        modifierSet: SemanticTokenModifier._
-                    });
+                let semanticType = SemanticTokenType.class;
+                if (predefined[component.name]) {
+                    semanticType = SemanticTokenType.keyword;
+                } else if (component.terminal) {
+                    semanticType = SemanticTokenType.parameter;
                 }
+                r.push({
+                    start: getPos(component.offset),
+                    length: component.length,
+                    typeIdx: semanticType,
+                    modifierSet: SemanticTokenModifier._
+                });
             }
             return r;
         }
@@ -251,6 +249,11 @@ export function parse(text: string): YACCDocument {
                     case ParserState.Normal:
                         break;
                     case ParserState.WaitingToken:
+                        if (predefined[word]) {
+                            addProblem(`You cannot declare the preserved keyword "${word}" as a token!`,
+                                offset, scanner.getTokenEnd(), ProblemType.Error);
+                            break;
+                        }
                         addSymbolToMap(document.tokens, true, offset, scanner.getTokenEnd(), word, type);
                         break;
                     case ParserState.WaitingSymbol:
@@ -286,6 +289,12 @@ export function parse(text: string): YACCDocument {
                                 lastNode.end = nonTerminal.offset - 1;
                                 lastNode.length = lastNode.end - lastNode.offset;
                                 document.nodes.push(lastNode);
+                                lastNode = undefined;
+                            }
+                            if (predefined[nonTerminal.name]) {
+                                addProblem(`You cannot declare the preserved keyword "${nonTerminal.name}" as a non-terminal!`,
+                                    nonTerminal.offset, nonTerminal.end, ProblemType.Error);
+                                break;
                             }
                             nonTerminal.terminal = false; // this will not be a terminal
                             nonTerminal.definition = [nonTerminal.offset, nonTerminal.end]; // is defined here

@@ -43,6 +43,7 @@ export interface Scanner {
 }
 
 export const tokenTypes: string[] = [];
+tokenTypes[SemanticTokenType.keyword] = 'keyword';
 tokenTypes[SemanticTokenType.class] = 'class';
 tokenTypes[SemanticTokenType.enum] = 'enum';
 tokenTypes[SemanticTokenType.interface] = 'interface';
@@ -56,7 +57,7 @@ tokenTypes[SemanticTokenType.function] = 'function';
 tokenTypes[SemanticTokenType.member] = 'member';
 
 export const tokenModifiers: string[] = [];
-tokenModifiers[SemanticTokenModifier.async] = 'async';
 tokenModifiers[SemanticTokenModifier.declaration] = 'declaration';
-tokenModifiers[SemanticTokenModifier.readonly] = 'readonly';
 tokenModifiers[SemanticTokenModifier.static] = 'static';
+tokenModifiers[SemanticTokenModifier.async] = 'async';
+tokenModifiers[SemanticTokenModifier.readonly] = 'readonly';

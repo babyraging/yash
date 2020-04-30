@@ -8,7 +8,7 @@ export interface SemanticTokenData {
 }
 
 export const enum SemanticTokenType {
-    class, enum, interface, namespace, typeParameter, type, parameter, variable, property, function, member, _
+    keyword, class, enum, interface, namespace, typeParameter, type, parameter, variable, property, function, member, _
 }
 
 export const enum SemanticTokenModifier {

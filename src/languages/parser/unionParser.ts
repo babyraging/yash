@@ -206,7 +206,6 @@ export function parse(text: string): YYType[] {
                 break;
             case TokenType.Word:
                 if (type !== undefined) {
-                    console.log(scanner.getTokenText());
                     type.type.push(scanner.getTokenText());
                 } else {
                     type = { type: [scanner.getTokenText()], info: '', location: [offset, -1] }
