@@ -16,7 +16,8 @@ import {
     SignatureHelp,
     DocumentHighlight,
     FormattingOptions,
-    TextEdit
+    TextEdit,
+    Range
 } from 'vscode'
 
 import { DocumentCache } from '../documentCache';
@@ -33,14 +34,13 @@ export interface LanguageMode {
     doSignatureHelp?: (document: TextDocument, position: Position) => SignatureHelp | null;
     doRename?: (document: TextDocument, position: Position, newName: string) => WorkspaceEdit | null;
     doOnTypeRename?: (document: TextDocument, position: Position) => Range[] | null;
-    doFormat?: (document: TextDocument, position: Position) => TextEdit[];
     findDocumentHighlight?: (document: TextDocument, position: Position) => DocumentHighlight[];
     // findDocumentSymbols?: (document: TextDocument) => SymbolInformation[];
     // findDocumentLinks?: (document: TextDocument, documentContext: DocumentContext) => DocumentLink[];
     findTypeDefinition?: (document: TextDocument, position: Position) => Definition | null;
     findDefinition?: (document: TextDocument, position: Position) => Definition | null;
     findReferences?: (document: TextDocument, position: Position) => Location[];
-    format?: (document: TextDocument, range: Range, options: FormattingOptions, ) => TextEdit[];
+    format?: (document: TextDocument, range: Range, options: FormattingOptions) => TextEdit[];
     // findDocumentColors?: (document: TextDocument) => ColorInformation[];
     // getColorPresentations?: (document: TextDocument, color: Color, range: Range) => ColorPresentation[];
     // doAutoClose?: (document: TextDocument, position: Position) => string | null;

@@ -95,17 +95,17 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, new vscode.SemanticTokensLegend(semanticProvider.legend.types, semanticProvider.legend.modifiers)));
 
-	context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(selector, {
-		async provideFormat(document, position, token): Promise<vscode.TextEdit[] | null> {
+	context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(selector, {
+		async provideDocumentRangeFormattingEdits(document, range, options, token): Promise<vscode.TextEdit[] | null> {
 			return runSafe(() => {
 				const mode = languageModes.getMode(document.languageId);
-				if (!mode || !mode.doFormat) {
+				if (!mode || !mode.format) {
 					return null;
 				}
-				return mode.doFormat(document, position);
+				return mode.format(document, range, options);
 			}, null, `Error while formatting for ${document.uri.toString()}`, token);
 		}
-	}, null, null));
+	}));
 
 	// The content of a text document has changed. 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(change => {
