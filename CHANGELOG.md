@@ -13,6 +13,7 @@
 ### Bug fixes
 - Fixed wrongly detect regex quantifier {1, 2} as symbol (lex)
 - Fixed missing `error` predefined symbol to yacc (yacc)
+- Fixed escaped {}s detection (flex)
 
 ## Release
 

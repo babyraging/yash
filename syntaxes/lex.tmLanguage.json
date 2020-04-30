@@ -85,8 +85,8 @@
 						},
 						{
 							"name": "entity.block.lex",
-							"begin": "{",
-							"end": "}",
+							"begin": "(?<=[^\\\\]|^){",
+							"end": "(?<=[^\\\\]|^)}",
 							"patterns": [
 								{
 									"include": "#embedded"
@@ -221,8 +221,8 @@
 						"match": "^.*(?={)"
 					},
 					{
-						"begin": "{",
-						"end": "}",
+						"begin": "(?<=[^\\\\]|^){",
+						"end": "(?<=[^\\\\]|^)}",
 						"patterns": [
 							{
 								"include": "#embedded"
@@ -278,7 +278,7 @@
 			]
 		},
 		"user-define": {
-			"match": "(?<=[^\\\\]){([a-zA-Z0-9_]+)(?<=[^\\\\])}",
+			"match": "(?<=[^\\\\]|^){([a-zA-Z]\\w*)(?<=[^\\\\])}",
 			"captures": {
 				"0": {
 					"name": "entity.name.function"

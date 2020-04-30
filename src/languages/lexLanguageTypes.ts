@@ -23,6 +23,7 @@ export enum TokenType {
     Invalid,
     Unknown,
     Divider,
+    Escape,
     EOL,
     EOS
 }

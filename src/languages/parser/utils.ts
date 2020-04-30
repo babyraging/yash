@@ -25,6 +25,7 @@ export const _WSP = ' '.charCodeAt(0);
 export const _LAN = '<'.charCodeAt(0);
 export const _RAN = '>'.charCodeAt(0);
 export const _FSL = '/'.charCodeAt(0);
+export const _BSL = '\\'.charCodeAt(0);
 export const _AST = '*'.charCodeAt(0);
 export const _COL = ':'.charCodeAt(0);
 export const _BAR = '|'.charCodeAt(0);

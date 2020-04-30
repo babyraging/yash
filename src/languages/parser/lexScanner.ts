@@ -1,5 +1,5 @@
 import { TokenType, ScannerState, Scanner } from '../lexLanguageTypes'
-import { MultiLineStream, _FSL, _AST, _NWL, _PCS, _BOP, _LAN, _BAR, _WSP, _DQO, _SQO, _BCL, _RAN } from './utils';
+import { MultiLineStream, _FSL, _AST, _NWL, _PCS, _BOP, _LAN, _BAR, _WSP, _DQO, _SQO, _BCL, _RAN, _BSL } from './utils';
 
 export function createScanner(input: string, initialOffset = 0, initialState: ScannerState = ScannerState.WithinContent): Scanner {
     const stream = new MultiLineStream(input, initialOffset);
@@ -119,6 +119,9 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                         }
                         stream.advance(1);
                         return finishToken(offset, TokenType.Unknown);
+                    case _BSL: // \
+                        stream.advance(1); // include the next escaped character
+                        return finishToken(offset, TokenType.Escape);
                 }
 
                 stream.goBack(1);
