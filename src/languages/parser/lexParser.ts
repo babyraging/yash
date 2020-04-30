@@ -1,7 +1,7 @@
 import { createScanner } from "./lexScanner";
-import { TokenType, ProblemType, ProblemRelated } from "../lexLanguageTypes";
+import { TokenType } from "../lexLanguageTypes";
 import { binarySearch } from "./utils";
-import { Problem } from "../lexLanguageTypes";
+import { Problem, ProblemType, ProblemRelated } from "../common";
 
 const _CHX = 'x'.charCodeAt(0);
 const _CHS = 's'.charCodeAt(0);
@@ -112,6 +112,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
     let tokenText = '';
     let acceptingStates = false;
     let lastToken = token;
+    let isConditionScope = false;
     while (end < 0 && token !== TokenType.EOS) {
         offset = scanner.getTokenOffset();
         switch (token) {
@@ -141,6 +142,8 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                 switch (token) {
                     case TokenType.Word:
                         addSymbol(document.defines, scanner.getTokenText(), scanner.getTokenOffset(), scanner.getTokenEnd());
+
+                        // this is stops counting regex pattern like [{] as action opener
                         scanner.disableMultiLineBrackets();
                         state = ParserState.WaitingDef;
                         break;
@@ -219,6 +222,9 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                             });
                         }
                         break;
+                    case TokenType.StartAction:
+                        isConditionScope = lastToken === TokenType.EndStates;
+                        break;
                     case TokenType.Action: // found using user defined definition
                         tokenText = scanner.getTokenText();
                         if (/^\w+$/.test(tokenText)) { // if {word}
@@ -231,7 +237,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                                 definition: [-1, -1],
                                 references: [[offset, scanner.getTokenEnd()]]
                             });
-                        } else {
+                        } else if (isConditionScope) {
                             /**
                              * If initial state scope
                              * <state>{
@@ -241,6 +247,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                              * 
                              * }
                              */
+                            console.log("condition scope");
                             const recursive = parse(tokenText, ParserState.WaitingRule);
                             recursive.components.forEach(c => {
                                 c.offset += offset;
@@ -254,6 +261,8 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                                 code.end += offset;
                                 document.embedded.push(code);
                             });
+                        } else {
+                            addProblem("Invalid definition pattern.", scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
                         }
                         break;
                     case TokenType.Divider:

@@ -1,5 +1,5 @@
-import { TextDocument, Position, Range, WorkspaceEdit, TextEdit } from 'vscode';
-import { LexDocument, ISymbol } from "../parser/lexParser"
+import { TextDocument, Position, Range, WorkspaceEdit } from 'vscode';
+import { LexDocument, ISymbol } from '../parser/lexParser'
 
 export function doLEXRename(document: TextDocument, position: Position, newName: string, lexDocument: LexDocument): WorkspaceEdit | null {
     const offset = document.offsetAt(position);

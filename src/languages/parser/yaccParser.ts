@@ -1,7 +1,8 @@
 import { binarySearch } from './utils';
 import { createScanner } from './yaccScanner';
 import { parse as parseUnion, YYType } from './unionParser';
-import { TokenType, ProblemType, Problem, ProblemRelated } from '../yaccLanguageTypes';
+import { TokenType } from '../yaccLanguageTypes';
+import { ProblemType, Problem, ProblemRelated } from '../common';
 import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
 import { Position } from 'vscode';
 

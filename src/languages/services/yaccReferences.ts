@@ -1,5 +1,5 @@
 import { TextDocument, Position, Location, Range } from 'vscode';
-import { YACCDocument, ISymbol } from "../parser/yaccParser";
+import { YACCDocument, ISymbol } from '../parser/yaccParser';
 
 export function doYACCFindReferences(document: TextDocument, position: Position, yaccDocument: YACCDocument): Location[] {
     const offset = document.offsetAt(position);

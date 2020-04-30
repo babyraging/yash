@@ -1,5 +1,5 @@
 import { TextDocument, Position, Definition, Location, Range } from 'vscode';
-import { YACCDocument, ISymbol } from "../parser/yaccParser";
+import { YACCDocument, ISymbol } from '../parser/yaccParser';
 
 export function doYACCFindTypeDefinition(document: TextDocument, position: Position, yaccDocument: YACCDocument): Definition | null {
     const offset = document.offsetAt(position);

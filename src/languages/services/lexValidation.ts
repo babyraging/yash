@@ -1,6 +1,6 @@
-import { TextDocument, Diagnostic, Range, DiagnosticSeverity, DiagnosticRelatedInformation, Location } from "vscode";
-import { ProblemType } from "../yaccLanguageTypes";
-import { LexDocument } from "../parser/lexParser";
+import { TextDocument, Diagnostic, Range, DiagnosticSeverity, DiagnosticRelatedInformation, Location } from 'vscode';
+import { ProblemType } from '../common';
+import { LexDocument } from '../parser/lexParser';
 
 export function doLEXValidation(document: TextDocument, lexDocument: LexDocument): Diagnostic[] {
     const diags: Diagnostic[] = [];

@@ -1,6 +1,6 @@
-import { TextDocument, Diagnostic, Range, DiagnosticSeverity, DiagnosticRelatedInformation, Location } from "vscode";
-import { YACCDocument } from "../parser/yaccParser";
-import { ProblemType } from "../yaccLanguageTypes";
+import { TextDocument, Diagnostic, Range, DiagnosticSeverity, DiagnosticRelatedInformation, Location } from 'vscode';
+import { YACCDocument } from '../parser/yaccParser';
+import { ProblemType } from '../common';
 
 export function doYACCValidation(document: TextDocument, yaccDocument: YACCDocument): Diagnostic[] {
     const diags: Diagnostic[] = [];

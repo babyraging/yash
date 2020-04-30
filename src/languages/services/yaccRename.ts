@@ -1,5 +1,5 @@
 import { TextDocument, Position, Range, WorkspaceEdit, TextEdit } from 'vscode';
-import { YACCDocument, ISymbol } from "../parser/yaccParser";
+import { YACCDocument, ISymbol } from '../parser/yaccParser';
 
 export function doYACCRename(document: TextDocument, position: Position, newName: string, yaccDocument: YACCDocument): WorkspaceEdit | null {
     const offset = document.offsetAt(position);

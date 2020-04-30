@@ -1,6 +1,6 @@
 import { TextDocument, Hover, Position, MarkdownString } from 'vscode';
-import { LexDocument, ISymbol } from "../parser/lexParser";
-import { createMarkedCodeString } from "./utils";
+import { LexDocument, ISymbol } from '../parser/lexParser';
+import { createMarkedCodeString } from './utils';
 
 export function doLEXHover(document: TextDocument, position: Position, lexDocument: LexDocument): Hover | null {
     const offset = document.offsetAt(position);

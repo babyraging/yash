@@ -1,6 +1,6 @@
-import { TextDocument, Hover, Position, MarkedString, MarkdownString } from 'vscode';
-import { YACCDocument, ISymbol, NodeType } from "../parser/yaccParser";
-import { createMarkedCodeString } from "./utils";
+import { TextDocument, Hover, Position, MarkdownString } from 'vscode';
+import { YACCDocument, ISymbol } from '../parser/yaccParser';
+import { createMarkedCodeString } from './utils';
 
 export function doYACCHover(document: TextDocument, position: Position, yaccDocument: YACCDocument): Hover | null {
     const offset = document.offsetAt(position);

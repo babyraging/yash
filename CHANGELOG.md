@@ -2,6 +2,8 @@
 
 ## UnReleased
 
+## Release
+
 ## 0.2.2
 
 ### Added
@@ -18,15 +20,15 @@
 
 ### Changed
 - Change dollars syntax scope naming
+- Simple refactoring, add common files
 
 ### Bug fixes
-- Fixed unable to detect int name[100]; variable name pattern.
-
-## Release
+- Fixed unable to detect int name[100]; variable name pattern. (yacc)
+- Fixed a missing case for start state scope detection (lex)
 
 ## 0.2.1
 ### Added
-- Added support for initial state scope (lex)
+- Added support for start state scope (lex)
 
 ### Changed
 - Now uses a parser to parse the %union types instead of regex (yacc)
@@ -97,7 +99,7 @@
 ## 0.0.7
 ### Added
 - Added comment highlight (lex)
-- Added multi initial states <a, b, c, d> highlight (lex)
+- Added multi start states <a, b, c, d> highlight (lex)
 - Added basic hover and goto definition support (lex/yacc)
 - Added new keywords, nonassoc|pure-parser|name-prefix|locations (yacc)
 - Added multiline token definitions detection (yacc)

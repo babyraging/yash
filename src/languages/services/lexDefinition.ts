@@ -1,5 +1,5 @@
 import { TextDocument, Position, Definition, Location, Range } from 'vscode';
-import { LexDocument, ISymbol } from "../parser/lexParser";
+import { LexDocument, ISymbol } from '../parser/lexParser';
 
 export function doLEXFindDefinition(document: TextDocument, position: Position, lexDocument: LexDocument): Definition | null {
     const offset = document.offsetAt(position);
