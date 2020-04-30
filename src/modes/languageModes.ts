@@ -33,6 +33,7 @@ export interface LanguageMode {
     doSignatureHelp?: (document: TextDocument, position: Position) => SignatureHelp | null;
     doRename?: (document: TextDocument, position: Position, newName: string) => WorkspaceEdit | null;
     doOnTypeRename?: (document: TextDocument, position: Position) => Range[] | null;
+    doFormat?: (document: TextDocument, position: Position) => TextEdit[];
     findDocumentHighlight?: (document: TextDocument, position: Position) => DocumentHighlight[];
     // findDocumentSymbols?: (document: TextDocument) => SymbolInformation[];
     // findDocumentLinks?: (document: TextDocument, documentContext: DocumentContext) => DocumentLink[];

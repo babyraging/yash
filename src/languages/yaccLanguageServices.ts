@@ -1,7 +1,7 @@
 import { createScanner } from './parser/yaccScanner';
 import { parse, YACCDocument } from './parser/yaccParser';
 import { Scanner } from './yaccLanguageTypes';
-import { TextDocument, Position, Diagnostic, WorkspaceEdit, Hover, CompletionList, CompletionItem, Range, Definition, Location } from 'vscode';
+import { TextDocument, Position, Diagnostic, WorkspaceEdit, Hover, CompletionList, CompletionItem, Range, Definition, Location, TextEdit } from 'vscode';
 import { doYACCComplete } from './services/yaccCompletions';
 import { doYACCHover } from './services/yaccHover';
 import { SemanticTokenData } from './semanticTokens';
@@ -10,6 +10,7 @@ import { doYACCFindReferences } from './services/yaccReferences';
 import { doYACCRename } from './services/yaccRename';
 import { doYACCValidation } from './services/yaccValidation';
 import { doYACCFindTypeDefinition } from './services/yaccTypeDefinition';
+import { doYACCFormat } from './services/yaccFormatter';
 
 export interface LanguageService {
     createScanner(input: string, initialOffset?: number): Scanner;
@@ -22,6 +23,7 @@ export interface LanguageService {
     findDefinition(document: TextDocument, position: Position, yaccDocument: YACCDocument): Definition | null;
     findReferences(document: TextDocument, position: Position, yaccDocument: YACCDocument): Location[];
     doRename(document: TextDocument, position: Position, newName: string, yaccDocument: YACCDocument): WorkspaceEdit | null;
+    doFormat(document: TextDocument, position: Position, yaccDocument: YACCDocument): TextEdit[];
 }
 
 export function getLanguageService(): LanguageService {
@@ -35,6 +37,7 @@ export function getLanguageService(): LanguageService {
         findTypeDefinition: (document, position, yaccDocument) => doYACCFindTypeDefinition(document, position, yaccDocument),
         findDefinition: (document, position, yaccDocument) => doYACCFindDefinition(document, position, yaccDocument),
         findReferences: (document, position, yaccDocument) => doYACCFindReferences(document, position, yaccDocument),
-        doRename: (document, position, newName, yaccDocument) => doYACCRename(document, position, newName, yaccDocument)
+        doRename: (document, position, newName, yaccDocument) => doYACCRename(document, position, newName, yaccDocument),
+        doFormat: (document, position, yaccDocument) => doYACCFormat(document, position, yaccDocument)
     };
 }

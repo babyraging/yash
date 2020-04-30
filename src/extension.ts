@@ -95,6 +95,18 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, new vscode.SemanticTokensLegend(semanticProvider.legend.types, semanticProvider.legend.modifiers)));
 
+	context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(selector, {
+		async provideFormat(document, position, token): Promise<vscode.TextEdit[] | null> {
+			return runSafe(() => {
+				const mode = languageModes.getMode(document.languageId);
+				if (!mode || !mode.doFormat) {
+					return null;
+				}
+				return mode.doFormat(document, position);
+			}, null, `Error while formatting for ${document.uri.toString()}`, token);
+		}
+	}, null, null));
+
 	// The content of a text document has changed. 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(change => {
 		triggerValidation(change.document);
