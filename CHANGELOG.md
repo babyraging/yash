@@ -2,6 +2,11 @@
 
 ## UnReleased
 
+## 0.2.4
+
+### Bug fixes
+- Fixed syntax highlight single line comment inside keywords (yacc)
+
 ## Release
 
 ## 0.2.3
