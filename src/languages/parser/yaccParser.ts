@@ -6,15 +6,13 @@ import { ProblemType, Problem, ProblemRelated } from '../common';
 import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
 import { Position } from 'vscode';
 
-export const predefined: { [name: string]: boolean } = {};
-predefined['UPLUS'] = true;
-predefined['UMINUS'] = true;
-predefined['POSTFIXOP'] = true;
-predefined['error'] = true;
+export const predefined: { [name: string]: string } = {};
+predefined['error'] = "Predefined syntax error token.";
 
 enum ParserState {
     WaitingToken,
     WaitingSymbol,
+    WaitingPrecedence,
     WaitingRule,
     WaitingUnion,
     Normal
@@ -50,6 +48,7 @@ export interface YACCDocument {
 export enum NodeType {
     Token,
     Type,
+    Precedence,
     Rule,
     Embedded
 };
@@ -59,6 +58,7 @@ export interface Node {
     offset: number;
     length: number;
     end: number;
+    name?: string;
 
     typeOffset?: number;
     typeEnd?: number;
@@ -187,7 +187,7 @@ export function parse(text: string): YACCDocument {
             case TokenType.Option:
                 // save the last node
                 if (state !== ParserState.WaitingRule && lastNode !== undefined) {
-                    lastNode.end = offset - 1;
+                    lastNode.end = offset;
                     lastNode.length = lastNode.end - lastNode.offset;
                     document.nodes.push(lastNode);
                     type = '';
@@ -206,6 +206,12 @@ export function parse(text: string): YACCDocument {
                     case '%type':
                         lastNode = { nodeType: NodeType.Type, offset: offset, length: -1, end: -1 }
                         state = ParserState.WaitingSymbol;
+                        break;
+                    case '%left':
+                    case '%right':
+                    case '%nonassoc':
+                        lastNode = { nodeType: NodeType.Precedence, offset: offset, length: -1, end: -1 }
+                        state = ParserState.WaitingPrecedence;
                         break;
                     default:
                         break;
@@ -233,7 +239,7 @@ export function parse(text: string): YACCDocument {
             case TokenType.RulesTag:
                 // start of the rule section
                 if (lastNode !== undefined) {
-                    lastNode.end = offset - 1;
+                    lastNode.end = offset;
                     lastNode.length = lastNode.end - lastNode.offset;
                     document.nodes.push(lastNode);
                     lastNode = undefined;
@@ -258,6 +264,11 @@ export function parse(text: string): YACCDocument {
                         break;
                     case ParserState.WaitingSymbol:
                         addSymbolToMap(document.symbols, true, offset, scanner.getTokenEnd(), word, type);
+                        break;
+                    case ParserState.WaitingPrecedence:
+                        if (!document.tokens[word]) {
+                            addSymbolToMap(document.tokens, true, offset, scanner.getTokenEnd(), word, type);
+                        }
                         break;
                     case ParserState.WaitingRule:
                         document.components.push({
@@ -286,7 +297,7 @@ export function parse(text: string): YACCDocument {
                         const nonTerminal = document.components.pop(); // the last symbol was not part of last rule
                         if (nonTerminal !== undefined) { // I think the array will never be empty, but check for sanity
                             if (lastNode !== undefined) { // Last rule finished
-                                lastNode.end = nonTerminal.offset - 1;
+                                lastNode.end = nonTerminal.offset;
                                 lastNode.length = lastNode.end - lastNode.offset;
                                 document.nodes.push(lastNode);
                                 lastNode = undefined;
@@ -320,7 +331,7 @@ export function parse(text: string): YACCDocument {
                                 });
                             }
                             document.symbols[nonTerminal.name] = nonTerminal; // update symbol table
-                            lastNode = { nodeType: NodeType.Rule, offset: nonTerminal.offset, length: -1, end: -1, actions: [] }
+                            lastNode = { nodeType: NodeType.Rule, name: nonTerminal.name, offset: nonTerminal.offset, length: -1, end: -1, actions: [] }
                         }
                         break;
                     default:
@@ -396,6 +407,26 @@ export function parse(text: string): YACCDocument {
             delete document.symbols[key];
         }
     });
+
+    document.nodes
+        .filter(n => n.nodeType === NodeType.Rule)
+        .filter(n => n.actions !== undefined)
+        .forEach(node => {
+            for (let i = 0; i < node.actions!.length; i++) {
+                const element = node.actions![i];
+                if (element.indexOf('$$') !== -1) {
+                    const symbol = document.symbols[node.name!];
+                    if (!symbol.type) {
+                        addProblem('Semantic value used inside actions but has not declared the type.',
+                            symbol.offset,
+                            symbol.end,
+                            ProblemType.Error
+                        )
+                    }
+                    break;
+                }
+            }
+        });
 
     return document
 }

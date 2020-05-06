@@ -9,10 +9,11 @@ This extension provides full syntax highlight for these languages and also for t
 This extension also supports some basic language features such as:
 - Code diagnostic 
 - Auto-completion
-- Hover feature
 - Go to Definition
+- Go to Type Definition
 - Find references
 - Rename Symbol
+- Hover 
 
 ## Preview
 

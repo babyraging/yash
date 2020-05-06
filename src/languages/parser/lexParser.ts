@@ -237,7 +237,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                                 definition: [-1, -1],
                                 references: [[offset, scanner.getTokenEnd()]]
                             });
-                        } else if (/^\d+(,\s*\d+){0,1}$$/.test(tokenText)) { // if {5}, {2,3}
+                        } else if (/^\d+(\s*,\s*\d+){0,1}$/.test(tokenText)) { // if {5}, {2,3}
                             // do nothing
                         } else if (isConditionScope) {
                             /**

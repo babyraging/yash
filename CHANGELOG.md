@@ -2,12 +2,20 @@
 
 ## UnReleased
 
+## Release
+
 ## 0.2.4
+
+### Added
+- Added diagnostic error when semantic value ($$) is used but the type was not declared
+- Now %left %right %nonassoc creates new tokens when a token was not already declared
+
+### Changed
+- Removed some predefined keywords as there are not predefined
 
 ### Bug fixes
 - Fixed syntax highlight single line comment inside keywords (yacc)
-
-## Release
+- Fixed a small bug which didn't allow spaces in regex quantifier
 
 ## 0.2.3
 

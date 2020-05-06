@@ -1,5 +1,5 @@
 import { TextDocument, Hover, Position, MarkdownString } from 'vscode';
-import { YACCDocument, ISymbol } from '../parser/yaccParser';
+import { YACCDocument, ISymbol, predefined } from '../parser/yaccParser';
 import { createMarkedCodeString } from './utils';
 
 export function doYACCHover(document: TextDocument, position: Position, yaccDocument: YACCDocument): Hover | null {
@@ -28,10 +28,12 @@ export function doYACCHover(document: TextDocument, position: Position, yaccDocu
     var message: MarkdownString | undefined = undefined;
     if ((symbol = yaccDocument.symbols[word])) {
         message = createMarkedCodeString(`%type <${symbol.type ? symbol.type : '?'}> ${symbol.name}`, 'yacc');
-    }
-
-    if ((symbol = yaccDocument.tokens[word])) {
-        message = createMarkedCodeString(`%token <${symbol.type ? symbol.type : '?'}> ${symbol.name}`, 'yacc');
+    } else if ((symbol = yaccDocument.tokens[word])) {
+        const node = yaccDocument.getNodeByOffset(symbol.offset)!;
+        const head = document.getText(document.getWordRangeAtPosition(document.positionAt(node!.offset + 1)));
+        message = createMarkedCodeString(`%${head} <${symbol.type ? symbol.type : '?'}> ${symbol.name}`, 'yacc');
+    } else if (predefined[word]) {
+        message = createMarkedCodeString(predefined[word], 'yacc');
     }
 
     if (message)
