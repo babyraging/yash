@@ -9,7 +9,7 @@ export function doYACCFindDefinition(document: TextDocument, position: Position,
     }
 
     const word = document.getText(document.getWordRangeAtPosition(position));
-    var symbol: ISymbol | undefined = yaccDocument.types[word] || yaccDocument.symbols[word] || yaccDocument.tokens[word];
+    var symbol: ISymbol | undefined = yaccDocument.types[word] || yaccDocument.symbols[word] || yaccDocument.tokens[word] || yaccDocument.aliases[`"${word}"`];
     let location: Location | null = null;
     if (symbol) {
         location = new Location(document.uri, new Range(document.positionAt(symbol.definition[0]), document.positionAt(symbol.definition[1])));

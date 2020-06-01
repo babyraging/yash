@@ -32,6 +32,13 @@ export function doYACCHover(document: TextDocument, position: Position, yaccDocu
         const node = yaccDocument.getNodeByOffset(symbol.offset)!;
         const head = document.getText(document.getWordRangeAtPosition(document.positionAt(node!.offset + 1)));
         message = createMarkedCodeString(`%${head} <${symbol.type ? symbol.type : '?'}> ${symbol.name}`, 'yacc');
+    } else if ((symbol = yaccDocument.aliases[`"${word}"`])) {
+        if (symbol.alias) {
+            symbol = symbol.alias;
+            const node = yaccDocument.getNodeByOffset(symbol.offset)!;
+            const head = document.getText(document.getWordRangeAtPosition(document.positionAt(node!.offset + 1)));
+            message = createMarkedCodeString(`%${head} <${symbol.type ? symbol.type : '?'}> ${symbol.name}`, 'yacc');
+        }
     } else if (predefined[word]) {
         message = createMarkedCodeString(predefined[word], 'yacc');
     }

@@ -9,8 +9,9 @@ export function doYACCRename(document: TextDocument, position: Position, newName
     }
 
     const word = document.getText(document.getWordRangeAtPosition(position));
-    var symbol: ISymbol | undefined = yaccDocument.types[word] || yaccDocument.symbols[word] || yaccDocument.tokens[word];
+    var symbol: ISymbol | undefined = yaccDocument.types[word] || yaccDocument.symbols[word] || yaccDocument.tokens[word] || yaccDocument.aliases[`"${word}"`];
     const edits = new WorkspaceEdit();
+    if (symbol && symbol.name.startsWith('"')) newName = `"${newName}"`
     symbol?.references.forEach(reference => {
         edits.replace(document.uri, new Range(document.positionAt(reference[0]), document.positionAt(reference[1])), newName);
     })

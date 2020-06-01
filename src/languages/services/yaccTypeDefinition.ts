@@ -9,7 +9,7 @@ export function doYACCFindTypeDefinition(document: TextDocument, position: Posit
     }
 
     const word = document.getText(document.getWordRangeAtPosition(position));
-    var symbol: ISymbol | undefined = yaccDocument.symbols[word] || yaccDocument.tokens[word];
+    var symbol: ISymbol | undefined = yaccDocument.symbols[word] || yaccDocument.tokens[word] || yaccDocument.aliases[`"${word}"`];
     let location: Location | null = null;
     if (symbol && symbol.type) {
         const type = yaccDocument.types[symbol.type];

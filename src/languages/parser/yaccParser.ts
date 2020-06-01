@@ -1,4 +1,4 @@
-import { binarySearch } from './utils';
+import { binarySearch, _SQO } from './utils';
 import { createScanner } from './yaccScanner';
 import { parse as parseUnion, YYType } from './unionParser';
 import { TokenType } from '../yaccLanguageTypes';
@@ -28,6 +28,8 @@ export interface ISymbol {
     used: boolean;
     definition: [number, number];
     references: [number, number][];
+
+    alias?: ISymbol
 };
 
 export interface YACCDocument {
@@ -35,6 +37,7 @@ export interface YACCDocument {
     readonly nodes: Node[];
     readonly types: { [name: string]: ISymbol };
     readonly tokens: { [name: string]: ISymbol };
+    readonly aliases: { [name: string]: ISymbol };
     readonly symbols: { [name: string]: ISymbol };
     readonly components: ISymbol[];
     readonly rulesRange: [number, number];
@@ -73,6 +76,7 @@ export function parse(text: string): YACCDocument {
     const nodes: Node[] = [];
     const types: { [name: string]: ISymbol } = {};
     const tokens: { [name: string]: ISymbol } = {};
+    const aliases: { [name: string]: ISymbol } = {};
     const symbols: { [name: string]: ISymbol } = {};
     const components: ISymbol[] = [];
     const rulesRange: [number, number] = [0, text.length];
@@ -82,6 +86,7 @@ export function parse(text: string): YACCDocument {
         nodes,
         types,
         tokens,
+        aliases,
         symbols,
         components,
         rulesRange,
@@ -124,7 +129,7 @@ export function parse(text: string): YACCDocument {
         });
     }
 
-    function addSymbolToMap(symbols: { [name: string]: ISymbol }, terminal: boolean, offset: number, end: number, name: string, type: string) {
+    function addSymbolToMap(symbols: { [name: string]: ISymbol }, terminal: boolean, offset: number, end: number, name: string, type: string): ISymbol | undefined {
         const old = symbols[name];
         if (old) {
             addProblem(`Symbol was already declared/defined.`, offset, end, ProblemType.Error, {
@@ -132,6 +137,7 @@ export function parse(text: string): YACCDocument {
                 end: old.end,
                 message: "Was declared/defined here."
             });
+            return undefined;
         } else {
             symbols[name] = {
                 terminal: terminal,
@@ -144,6 +150,7 @@ export function parse(text: string): YACCDocument {
                 definition: [offset, end],
                 references: [[offset, end]]
             };
+            return symbols[name];
         }
     }
     let end = -2;
@@ -155,6 +162,7 @@ export function parse(text: string): YACCDocument {
     let tokenText = '';
     let lastNode: Node | undefined;
     let lastToken = token;
+    let lastTokenSymbol = undefined;
     while (end < 0 && token !== TokenType.EOS) {
         offset = scanner.getTokenOffset();
         switch (token) {
@@ -260,7 +268,7 @@ export function parse(text: string): YACCDocument {
                                 offset, scanner.getTokenEnd(), ProblemType.Error);
                             break;
                         }
-                        addSymbolToMap(document.tokens, true, offset, scanner.getTokenEnd(), word, type);
+                        lastTokenSymbol = addSymbolToMap(document.tokens, true, offset, scanner.getTokenEnd(), word, type);
                         break;
                     case ParserState.WaitingSymbol:
                         addSymbolToMap(document.symbols, true, offset, scanner.getTokenEnd(), word, type);
@@ -344,8 +352,37 @@ export function parse(text: string): YACCDocument {
             case TokenType.EndComment:
             case TokenType.Comment:
             case TokenType.Param:
-            case TokenType.Literal:
                 break;
+            case TokenType.Literal: {
+                const word = scanner.getTokenText();
+                const code = word.charCodeAt(0)
+                if (code == _SQO) break;
+                switch (state) {
+                    case ParserState.WaitingToken:
+                        if (lastTokenSymbol && lastTokenSymbol.alias == undefined) {
+                            lastTokenSymbol.alias = addSymbolToMap(document.aliases, true, offset, scanner.getTokenEnd(), word, lastTokenSymbol.type)
+                            if (lastTokenSymbol.alias)
+                                lastTokenSymbol.alias.alias = lastTokenSymbol
+                        } else {
+                            addProblem(`Alias not associated with an token.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                        }
+                        break;
+                    case ParserState.WaitingRule:
+                        document.components.push({
+                            terminal: true,
+                            offset: offset,
+                            length: scanner.getTokenLength(),
+                            end: scanner.getTokenEnd(),
+                            name: scanner.getTokenText(),
+                            type: '',
+                            used: true,
+                            definition: [-1, -1],
+                            references: [[offset, scanner.getTokenEnd()]]
+                        });
+                        break;
+                }
+                break;
+            }
             case TokenType.Bar:
                 if (state !== ParserState.WaitingRule) {
                     addProblem(`Unexpected | symbol.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
@@ -376,6 +413,14 @@ export function parse(text: string): YACCDocument {
             component.references = symbol.references;
             symbol.references.push([component.offset, component.end]);
             symbol.used = true;
+        } else if ((symbol = document.aliases[component.name])) {
+            component.definition = symbol.definition;
+            component.type = symbol.type;
+            component.references = symbol.references;
+            symbol.references.push([component.offset, component.end]);
+            symbol.used = true;
+            if (symbol.alias)
+                symbol.alias.used = true;
         } else if (!predefined[component.name]) {
             document.problems.push({
                 offset: component.offset,
