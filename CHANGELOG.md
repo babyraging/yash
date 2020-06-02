@@ -4,6 +4,11 @@
 
 ## Release
 
+## 0.2.5
+
+### Added
+- Added token alias support. issue #2
+
 ## 0.2.4
 
 ### Added
