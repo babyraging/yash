@@ -156,7 +156,7 @@
 				},
 				{
 					"name": "support.class.yacc",
-					"match": "[a-zA-Z]+\\w*"
+					"match": "[a-zA-Z_]+[\\w\\.]*"
 				},
 				{
 					"include": "#comments"
@@ -296,7 +296,7 @@
 			"patterns": [
 				{
 					"name": "variable.parameter.yacc",
-					"match": "[a-zA-Z_]+\\w*"
+					"match": "[a-zA-Z_]+[\\w\\.]*"
 				}
 			]
 		},
@@ -306,7 +306,7 @@
 			"patterns": [
 				{
 					"name": "keyword.variables.yacc",
-					"match": "[a-zA-Z_]+\\w*"
+					"match": "[a-zA-Z_]+[\\w\\.]*"
 				}
 			]
 		},
@@ -314,7 +314,7 @@
 			"patterns": [
 				{
 					"name": "support.class.yacc",
-					"match": "^[a-zA-Z_]+\\w*(?=[\\s:])"
+					"match": "^[a-zA-Z_]+[\\w\\.]*(?=[\\s:])"
 				}
 			]
 		},
