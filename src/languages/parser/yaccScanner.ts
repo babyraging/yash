@@ -12,7 +12,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
     let tokenError: string | undefined;
 
     function nextWord(): string {
-        return stream.advanceIfRegExp(/^[a-zA-Z]\w*/);
+        return stream.advanceIfRegExp(/^[a-zA-Z][\w.]*/);
     }
 
     function nextLiteral(): string {

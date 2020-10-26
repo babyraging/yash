@@ -218,6 +218,7 @@ export function parse(text: string): YACCDocument {
                     case '%left':
                     case '%right':
                     case '%nonassoc':
+                    case '%precedence':
                         lastNode = { nodeType: NodeType.Precedence, offset: offset, length: -1, end: -1 }
                         state = ParserState.WaitingPrecedence;
                         break;
