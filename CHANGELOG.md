@@ -4,6 +4,14 @@
 
 ## Release
 
+## 0.2.6
+
+### Changed
+- Allow dot as part of the symbol name. issue #3
+
+### Bug fixes
+- Fixed %precedence(yacc). issue #5
+
 ## 0.2.5
 
 ### Added

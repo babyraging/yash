@@ -41,7 +41,7 @@ export const _SCL = ';'.charCodeAt(0);
 export const _AND = '&'.charCodeAt(0);
 
 /**
- * Imported form Microsoft's vscode-html-languageservice's scanner.
+ * Imported from Microsoft's vscode-html-languageservice's scanner.
  * 
  * Thank you Microsoft.
  */
