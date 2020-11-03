@@ -1,6 +1,6 @@
 # Yet Another Syntax Highlighter
 
-This is yet an another syntax highlighter for lex/yacc and flex/bison.
+This is yet another syntax highlighter for lex/yacc and flex/bison.
 
 ## Features
 
