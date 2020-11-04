@@ -15,6 +15,8 @@ enum ParserState {
     WaitingPrecedence,
     WaitingRule,
     WaitingUnion,
+    WaitingDefine,
+    WaitingDefineType,
     Normal
 };
 
@@ -53,6 +55,7 @@ export enum NodeType {
     Type,
     Precedence,
     Rule,
+    Define, 
     Embedded
 };
 
@@ -163,6 +166,9 @@ export function parse(text: string): YACCDocument {
     let lastNode: Node | undefined;
     let lastToken = token;
     let lastTokenSymbol = undefined;
+    let defineType = false;
+    let unionType = false;
+    let defineDefaultType = '';
     while (end < 0 && token !== TokenType.EOS) {
         offset = scanner.getTokenOffset();
         switch (token) {
@@ -190,6 +196,11 @@ export function parse(text: string): YACCDocument {
                             lastNode.actions.push(scanner.getTokenText());
                         }
                         break;
+                    case ParserState.WaitingDefineType: //%define api.value.type {data type}
+                        tokenText = scanner.getTokenText();
+                        defineDefaultType = tokenText;
+                        state = ParserState.Normal;
+                        break;
                 }
                 break;
             case TokenType.Option:
@@ -205,6 +216,11 @@ export function parse(text: string): YACCDocument {
                 tokenText = scanner.getTokenText();
                 switch (tokenText) {
                     case '%union':
+                        if(defineType) { //%define api.valu.type was declared
+                            addProblem(`%union and %define api.value.type cannot be used together`, scanner.getTokenOffset(),
+                                scanner.getTokenEnd(), ProblemType.Warning);
+                        }
+                        unionType = true;
                         state = ParserState.WaitingUnion;
                         break;
                     case '%token':
@@ -221,6 +237,13 @@ export function parse(text: string): YACCDocument {
                     case '%precedence':
                         lastNode = { nodeType: NodeType.Precedence, offset: offset, length: -1, end: -1 }
                         state = ParserState.WaitingPrecedence;
+                        break;
+                    case '%define':
+                        if(unionType) { //%union was declared
+                            addProblem(`%union and %define api.value.type cannot be used together`, scanner.getTokenOffset(),
+                                scanner.getTokenEnd(), ProblemType.Warning);
+                        }
+                        state = ParserState.WaitingDefine;
                         break;
                     default:
                         break;
@@ -239,10 +262,15 @@ export function parse(text: string): YACCDocument {
                 // extract the type inside the tag <[type]>
                 type = scanner.getTokenText();
                 const t = document.types[type];
-                if (t) {
+                if(defineDefaultType !== '' && type !== defineDefaultType) { //type clash
+                    addProblem('Type is not the same as in %define api.value.type', scanner.getTokenOffset(), 
+                        scanner.getTokenEnd(), ProblemType.Warning);
+                } else if(!t && defineType) { //if type is not defined but %define api.value.type is
+                    addSymbolToMap(document.types, true, scanner.getTokenOffset(), scanner.getTokenEnd(), type, type);
+                } else if (t) {
                     t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
                 } else {
-                    addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                    addProblem(`Type was not declared in the %union or %define.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
                 }
                 break;
             case TokenType.RulesTag:
@@ -292,6 +320,35 @@ export function parse(text: string): YACCDocument {
                             references: [[offset, scanner.getTokenEnd()]]
                         });
                         break;
+                    case ParserState.WaitingDefine: //%define met
+                        switch (word) {
+                            case 'api.value.type': //rule for stack data type
+                                if(defineType) {
+                                    addProblem(`%define api.value.type was already defined`, scanner.getTokenOffset(), 
+                                    scanner.getTokenEnd(), ProblemType.Error);
+                                    state = ParserState.Normal;
+                                } else {
+                                    defineType = true;
+                                    state = ParserState.WaitingDefineType;
+                                }
+                                break;
+                            default: //other rules are ignored
+                                state = ParserState.Normal;
+                                break;
+                        }
+                        break;
+                    case ParserState.WaitingDefineType: //%define api.value.type met
+                        switch (word) {
+                            case 'union-directive': //just normal %union
+                            case 'union': //symbols defined with type name, Bison generate a union itself
+                            case 'variant': //same as union but with c++ types ex. std::string
+                                break;
+                            default: //%define api.value.type not matched
+                                addProblem(`Unexpected type ${word}`, offset, scanner.getTokenEnd(), ProblemType.Error);
+                                break;
+                        }
+                        state = ParserState.Normal;
+                        break;
                     default:
                         addProblem(`Unexpected symbol ${word}`, offset, scanner.getTokenEnd(), ProblemType.Error);
                 }
@@ -330,6 +387,8 @@ export function parse(text: string): YACCDocument {
                                 nonTerminal.references.push(symbol.references[0]); // add %type reference
                                 nonTerminal.type = symbol.type; // assign the type from %type
                                 symbol.references = nonTerminal.references; // update also the old references
+                            } else if(defineDefaultType !== ''){
+                                nonTerminal.type = defineDefaultType;
                             }
                             const token = document.tokens[nonTerminal.name];
                             if (token !== undefined) { // if the symbol was already declared as a token
@@ -462,7 +521,7 @@ export function parse(text: string): YACCDocument {
                 const element = node.actions![i];
                 if (element.indexOf('$$') !== -1) {
                     const symbol = document.symbols[node.name!];
-                    if (!symbol.type) {
+                    if (!symbol.type && defineDefaultType === '') {
                         addProblem('Semantic value used inside actions but has not declared the type.',
                             symbol.offset,
                             symbol.end,
