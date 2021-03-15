@@ -4,7 +4,7 @@ import { parse as parseUnion, YYType } from './unionParser';
 import { TokenType } from '../yaccLanguageTypes';
 import { ProblemType, Problem, ProblemRelated } from '../common';
 import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
-import { Position } from 'vscode';
+import { Position, workspace } from 'vscode';
 
 export const predefined: { [name: string]: string } = {};
 predefined['error'] = "Predefined syntax error token.";
@@ -462,7 +462,9 @@ export function parse(text: string): YACCDocument {
                 const element = node.actions![i];
                 if (element.indexOf('$$') !== -1) {
                     const symbol = document.symbols[node.name!];
-                    if (!symbol.type) {
+                    const config = workspace.getConfiguration('yash');
+                    const yyType = config.get('YYTYPE', '');
+                    if (!symbol.type && yyType === '') {
                         addProblem('Semantic value used inside actions but has not declared the type.',
                             symbol.offset,
                             symbol.end,

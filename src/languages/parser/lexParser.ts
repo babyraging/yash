@@ -6,6 +6,9 @@ import { Problem, ProblemType, ProblemRelated } from "../common";
 const _CHX = 'x'.charCodeAt(0);
 const _CHS = 's'.charCodeAt(0);
 
+export const predefinedStates: { [name: string]: string } = {};
+predefinedStates['INITIAL'] = "%s INITIAL /* Predefined initial state. */";
+
 export interface ISymbol {
     offset: number;
     length: number;
@@ -311,7 +314,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
             component.references = symbol.references;
             symbol.references.push([component.offset, component.end]);
             symbol.used = true;
-        } else {
+        } else if (!predefinedStates[component.name]){
             addProblem('Symbol not declared.',
                 component.offset,
                 component.end,

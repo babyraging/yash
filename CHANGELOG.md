@@ -4,6 +4,19 @@
 
 ## Release
 
+## 0.2.7 15/03/2021
+
+### Added
+- Added YYTYPE setting for implicit non-terminal symbol type declaration (yacc). Issue #12
+
+### Changed
+- Now when a untyped non-terminal is accessed with $$ will not raise error if YYTYPE is set in the settings (yacc)
+
+### Bug fixes
+- Added INITIAL as predefined state (lex). Issue #12
+- Fixed syntax highlight for %state. Issue #12
+
+
 ## 0.2.6
 
 ### Changed

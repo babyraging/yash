@@ -11,6 +11,8 @@ const semanticProvider = newSemanticTokenProvider(languageModes)
 const selector: vscode.DocumentSelector = [{ scheme: 'file', language: 'yacc' }, { scheme: 'file', language: 'lex' }]
 const diagnostics = vscode.languages.createDiagnosticCollection();
 
+let configurationChanged = false;
+
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(diagnostics);
 
@@ -108,8 +110,17 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (editor) {
-			triggerValidation(editor.document);
+			if (configurationChanged) {
+				validateTextDocument(editor.document, true);
+			} else {
+				triggerValidation(editor.document);
+			}
 		}
+	}));
+
+	// Configuration is changed, trigger validation
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
+		configurationChanged = event.affectsConfiguration('yash.YYTYPE');
 	}));
 
 	if (vscode.window.activeTextEditor) {
@@ -133,10 +144,11 @@ function triggerValidation(textDocument: vscode.TextDocument): void {
 	}, validationDelayMs);
 }
 
-async function validateTextDocument(document: vscode.TextDocument) {
+async function validateTextDocument(document: vscode.TextDocument, force?: boolean) {
 	const mode = languageModes.getMode(document.languageId);
 	if (!mode || !mode.doValidation) {
 		return null;
 	}
-	diagnostics.set(document.uri, mode.doValidation(document));
+	diagnostics.set(document.uri, mode.doValidation(document, force));
+	configurationChanged = false;
 }

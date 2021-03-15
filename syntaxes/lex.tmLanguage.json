@@ -236,7 +236,7 @@
 				]
 		},
 		"states": {
-			"begin": "^%[sx]",
+			"begin": "^%(state|[sx])",
 			"end": "$",
 			"beginCaptures": {
 				"0": {

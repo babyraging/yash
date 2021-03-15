@@ -26,7 +26,7 @@ import { getLEXMode } from './lexMode';
 export interface LanguageMode {
     getId(): string;
     getSelectionRange?: (document: TextDocument, position: Position) => SelectionRange;
-    doValidation?: (document: TextDocument) => Diagnostic[];
+    doValidation?: (document: TextDocument, force?: boolean) => Diagnostic[];
     doComplete?: (document: TextDocument, position: Position) => CompletionList | CompletionItem[];
     doResolve?: (document: TextDocument, item: CompletionItem) => CompletionItem;
     doHover?: (document: TextDocument, position: Position) => Hover | null;

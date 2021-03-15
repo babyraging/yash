@@ -12,7 +12,10 @@ export function getYACCMode(yaccLanguageService: YACCLanguageService): LanguageM
         getId() {
             return 'yacc';
         },
-        doValidation(document: TextDocument): Diagnostic[] {
+        doValidation(document: TextDocument, force?:boolean): Diagnostic[] {
+            if (force) {
+                return yaccLanguageService.doValidation(document, yaccLanguageService.parseYACCDocument(document));
+            }
             const yacc = cache.get(document);
             return yaccLanguageService.doValidation(document, yacc);
         },

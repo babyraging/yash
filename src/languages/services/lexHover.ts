@@ -1,5 +1,5 @@
 import { TextDocument, Hover, Position, MarkdownString } from 'vscode';
-import { LexDocument, ISymbol } from '../parser/lexParser';
+import { LexDocument, ISymbol, predefinedStates } from '../parser/lexParser';
 import { createMarkedCodeString } from './utils';
 
 export function doLEXHover(document: TextDocument, position: Position, lexDocument: LexDocument): Hover | null {
@@ -14,6 +14,8 @@ export function doLEXHover(document: TextDocument, position: Position, lexDocume
     if (symbol) {
         const line = document.lineAt(document.positionAt(symbol.offset)).text;
         return { contents: [createMarkedCodeString(line, 'lex')] };
+    } else if (predefinedStates[word]) {
+        return { contents: [createMarkedCodeString(predefinedStates[word], 'lex')] };
     }
 
     return null;
