@@ -1,7 +1,7 @@
 import { binarySearch, _SQO } from './utils';
 import { createScanner } from './yaccScanner';
 import { parse as parseUnion, YYType } from './unionParser';
-import { TokenType } from '../yaccLanguageTypes';
+import { Scanner, TokenType } from '../yaccLanguageTypes';
 import { ProblemType, Problem, ProblemRelated } from '../common';
 import { SemanticTokenData, SemanticTokenModifier, SemanticTokenType } from '../semanticTokens';
 import { Position, workspace } from 'vscode';
@@ -153,6 +153,11 @@ export function parse(text: string): YACCDocument {
             return symbols[name];
         }
     }
+
+    function addUnknownSymbolProblem(scanner: Scanner) {
+        addProblem(`Unknown symbol ${scanner.getTokenText()}.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+    }
+
     let end = -2;
     let state = ParserState.Normal;
     let type = '';
@@ -227,22 +232,34 @@ export function parse(text: string): YACCDocument {
                 }
                 break;
             case TokenType.StartType:
-                type = ''
-                if (lastNode)
-                    lastNode.typeOffset = scanner.getTokenOffset();
+                if (state !== ParserState.WaitingRule) {
+                    type = ''
+                    if (lastNode)
+                        lastNode.typeOffset = scanner.getTokenOffset();
+                } else {
+                    addUnknownSymbolProblem(scanner);
+                }
                 break;
             case TokenType.EndType:
-                if (lastNode)
-                    lastNode.typeEnd = scanner.getTokenOffset();
+                if (state !== ParserState.WaitingRule) {
+                    if (lastNode)
+                        lastNode.typeEnd = scanner.getTokenOffset();
+                } else {
+                    addUnknownSymbolProblem(scanner);
+                }
                 break;
             case TokenType.TypeValue:
-                // extract the type inside the tag <[type]>
-                type = scanner.getTokenText();
-                const t = document.types[type];
-                if (t) {
-                    t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
+                if (state !== ParserState.WaitingRule) {
+                    // extract the type inside the tag <[type]>
+                    type = scanner.getTokenText();
+                    const t = document.types[type];
+                    if (t) {
+                        t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
+                    } else {
+                        addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                    }
                 } else {
-                    addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                    addUnknownSymbolProblem(scanner);
                 }
                 break;
             case TokenType.RulesTag:
@@ -392,7 +409,7 @@ export function parse(text: string): YACCDocument {
             default:
                 // TODO: better problem detection with unexpected symbols
                 if (state === ParserState.WaitingRule)
-                    addProblem(`Unknown symbol ${scanner.getTokenText()}.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                    addUnknownSymbolProblem(scanner);
                 break;
         }
         lastToken = token;

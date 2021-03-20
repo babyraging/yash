@@ -135,9 +135,8 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                 if (typeValue.length > 0) {
                     return finishToken(offset, TokenType.TypeValue);
                 }
-
+                stream.advance(1);
                 state = ScannerState.WithinContent;
-                stream.goBack(1);
                 return finishToken(offset, TokenType.Unknown);
             case ScannerState.WithinComment:
                 if (stream.advanceIfChars([_AST, _FSL])) { // */
@@ -173,7 +172,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                         case _SQO: // ' 
                         case _DQO: // " 
                             stream.goBack(1);
-                            if(!nextLiteral()) // skip string if not skip character
+                            if (!nextLiteral()) // skip string if not skip character
                                 stream.advance(1);
                             break;
                     }
