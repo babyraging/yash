@@ -4,6 +4,13 @@
 
 ## Release
 
+## 0.2.8
+
+### Bug fixes
+- Fixed a bug which leads infinite loop when parsing type inside <...>. Issue #13
+
+## Release
+
 ## 0.2.7 15/03/2021
 
 ### Added
