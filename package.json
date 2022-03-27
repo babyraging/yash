@@ -37,7 +37,8 @@
                     ".l++",
                     ".lxx",
                     ".lpp",
-                    ".fl"
+                    ".fl",
+                    ".lex"
                 ],
                 "configuration": "./lex-configuration.json"
             },
