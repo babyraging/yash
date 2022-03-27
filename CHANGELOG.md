@@ -10,7 +10,7 @@
 - Add more support to Bison syntax Issue #18
 
 ### Changed
-- Add .lex as a valid extension Issue #19
+- Add .lex as a valid extension Issue #20
 - Add default word completion Issue #15
 
 
