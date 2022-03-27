@@ -314,7 +314,7 @@
 			"patterns": [
 				{
 					"name": "support.class.yacc",
-					"match": "^[a-zA-Z_]+[\\w\\.]*(?=[\\s:])"
+					"match": "^[a-zA-Z_]+[\\w\\.-]*(?=[\\s:\\[])"
 				}
 			]
 		},

@@ -4,6 +4,16 @@
 
 ## Release
 
+## 0.2.9 27/03/2022
+
+### Bug fixes
+- Add more support to Bison syntax Issue #18
+
+### Changed
+- Add .lex as a valid extension Issue #19
+- Add default word completion Issue #15
+
+
 ## 0.2.8
 
 ### Bug fixes

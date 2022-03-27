@@ -46,6 +46,15 @@ export function doYACCHover(document: TextDocument, position: Position, yaccDocu
         message = createMarkedCodeString(predefined[word], 'yacc');
     }
 
+    const namedReference = yaccDocument.namedReferences[`[${word}]`]
+    if (namedReference) {
+        if (namedReference.symbol) {
+            message = createMarkedCodeString(`Named reference for ${namedReference.symbol}`, 'plaintext');
+        } else {
+            message = createMarkedCodeString(`Middle rule action reference`, 'plaintext');
+        }
+    }
+
     if (message)
         return { contents: [message] };
 

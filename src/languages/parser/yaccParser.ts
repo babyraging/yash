@@ -32,6 +32,15 @@ export interface ISymbol {
     alias?: ISymbol
 };
 
+export interface INamedReference {
+    name: string;
+    offset: number;
+    length: number;
+    end: number;
+
+    symbol?: string;
+}
+
 export interface YACCDocument {
     readonly embedded: Node[];
     readonly nodes: Node[];
@@ -40,6 +49,7 @@ export interface YACCDocument {
     readonly aliases: { [name: string]: ISymbol };
     readonly symbols: { [name: string]: ISymbol };
     readonly components: ISymbol[];
+    readonly namedReferences: { [name: string]: INamedReference };
     readonly rulesRange: [number, number];
     readonly problems: Problem[];
 
@@ -79,6 +89,7 @@ export function parse(text: string): YACCDocument {
     const aliases: { [name: string]: ISymbol } = {};
     const symbols: { [name: string]: ISymbol } = {};
     const components: ISymbol[] = [];
+    const namedReferences: { [name: string]: INamedReference } = {};
     const rulesRange: [number, number] = [0, text.length];
     const problems: Problem[] = [];
     const document: YACCDocument = {
@@ -89,6 +100,7 @@ export function parse(text: string): YACCDocument {
         aliases,
         symbols,
         components,
+        namedReferences,
         rulesRange,
         problems,
 
@@ -115,6 +127,16 @@ export function parse(text: string): YACCDocument {
                     modifierSet: SemanticTokenModifier._
                 });
             }
+
+            Object.keys(this.namedReferences).forEach(key => {
+                const component = this.namedReferences[key];
+                r.push({
+                    start: getPos(component.offset + 1),
+                    length: component.length - 2,
+                    typeIdx: SemanticTokenType.keyword,
+                    modifierSet: SemanticTokenModifier._
+                });
+            });
             return r;
         }
     };
@@ -167,6 +189,7 @@ export function parse(text: string): YACCDocument {
     let tokenText = '';
     let lastNode: Node | undefined;
     let lastToken = token;
+    let lastText = scanner.getTokenText();
     let lastTokenSymbol = undefined;
     while (end < 0 && token !== TokenType.EOS) {
         offset = scanner.getTokenOffset();
@@ -232,34 +255,22 @@ export function parse(text: string): YACCDocument {
                 }
                 break;
             case TokenType.StartType:
-                if (state !== ParserState.WaitingRule) {
-                    type = ''
-                    if (lastNode)
-                        lastNode.typeOffset = scanner.getTokenOffset();
-                } else {
-                    addUnknownSymbolProblem(scanner);
-                }
+                type = ''
+                if (lastNode)
+                    lastNode.typeOffset = scanner.getTokenOffset();
                 break;
             case TokenType.EndType:
-                if (state !== ParserState.WaitingRule) {
-                    if (lastNode)
-                        lastNode.typeEnd = scanner.getTokenOffset();
-                } else {
-                    addUnknownSymbolProblem(scanner);
-                }
+                if (lastNode)
+                    lastNode.typeEnd = scanner.getTokenOffset();
                 break;
             case TokenType.TypeValue:
-                if (state !== ParserState.WaitingRule) {
-                    // extract the type inside the tag <[type]>
-                    type = scanner.getTokenText();
-                    const t = document.types[type];
-                    if (t) {
-                        t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
-                    } else {
-                        addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
-                    }
+                // extract the type inside the tag <[type]>
+                type = scanner.getTokenText();
+                const t = document.types[type];
+                if (t) {
+                    t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
                 } else {
-                    addUnknownSymbolProblem(scanner);
+                    addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
                 }
                 break;
             case TokenType.RulesTag:
@@ -316,7 +327,7 @@ export function parse(text: string): YACCDocument {
             case TokenType.Colon:
                 switch (state) {
                     case ParserState.WaitingRule: // we maybe found a new non-terminal symbol definition
-                        if (lastToken !== TokenType.Word) {
+                        if (lastToken !== TokenType.Word && lastToken !== TokenType.Param) {
                             addProblem(`Unexpected ':' you can only declare a non-terminal with a word.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
                             break;
                         }
@@ -369,7 +380,27 @@ export function parse(text: string): YACCDocument {
             case TokenType.StartComment:
             case TokenType.EndComment:
             case TokenType.Comment:
+                break;
             case TokenType.Param:
+                if (state == ParserState.WaitingRule) {
+                    let symbol: string | undefined = undefined;
+                    switch (lastToken) {
+                        case TokenType.Word:
+                            symbol = lastText;
+                        case TokenType.EndAction:
+                            document.namedReferences[scanner.getTokenText()] = {
+                                name: scanner.getTokenText(),
+                                offset: scanner.getTokenOffset(),
+                                end: scanner.getTokenEnd(),
+                                length: scanner.getTokenLength(),
+                                symbol: symbol
+                            }
+                            break;
+                        default:
+                            addProblem(`Named reference to either non terminal or middle rule action`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
+                            break;
+                    }
+                }
                 break;
             case TokenType.Literal: {
                 const word = scanner.getTokenText();
@@ -413,6 +444,8 @@ export function parse(text: string): YACCDocument {
                 break;
         }
         lastToken = token;
+        lastText = scanner.getTokenText();
+
         token = scanner.scan();
     }
 

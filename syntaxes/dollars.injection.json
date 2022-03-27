@@ -4,12 +4,26 @@
 	"patterns": [
 	  {
 		"include": "#dollars-keyword"
+	  },
+	  {
+		  "include": "#ampersand-keyword"
+	  },
+	  {
+		  "include": "#mid-rule-keyword"
 	  }
 	],
 	"repository": {
 	  "dollars-keyword": {
-		"match": "\\$((<[a-zA-Z_*\b]+>)?([0-9]+|[a-zA-Z]+[0-9]*)|(\\$))(\\[[ +\\-*/a-zA-Z_0-9]+\\])?(?=[^$])",
+		"match": "\\$((<[a-zA-Z_*\b]+>)?([0-9]+|[a-zA-Z]+[0-9]*)|(\\$))(\\[[ +\\-*/a-zA-Z_0-9]+\\])?(?=[^$])|\\$\\[[\\w.-]+\\]",
 		"name": "keyword.dollars"
+	  },
+	  "ampersand-keyword": {
+		"match": "\\@\\w+",
+		"name": "constant.ampersand"
+	  },
+	  "mid-rule-keyword": {
+		"match": "\\$\\<\\w+\\>\\$",
+		"name": "keyword.midrule"
 	  }
 	}
  }

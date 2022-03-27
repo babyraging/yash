@@ -12,7 +12,8 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
     let tokenError: string | undefined;
 
     function nextWord(): string {
-        return stream.advanceIfRegExp(/^[a-zA-Z][\w.]*/);
+        // return stream.advanceIfRegExp(/^[a-zA-Z][\w.]*/);
+        return stream.advanceIfRegExp(/^[a-zA-Z][\w.-]*/);  // gnu bison extension allows the dash symbol
     }
 
     function nextLiteral(): string {
@@ -21,6 +22,10 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
 
     function nextParam(): string {
         return stream.advanceIfRegExp(/^\[[a-zA-Z]\w*\]/);
+    }
+
+    function nextMiddleRule(): string {
+        return stream.advanceIfRegExp(/^<[a-zA-Z]\w*>/);
     }
 
     function finishToken(offset: number, type: TokenType, errorMessage?: string): TokenType {
