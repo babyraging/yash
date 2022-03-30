@@ -5,7 +5,8 @@ import { TokenType } from '../yaccLanguageTypes';
 
 const keywords = ['type', 'token', 'option', 'token-table', 'left', 'right', 'define', 'output',
     'precedence', 'nterm', 'destructor', 'union', 'code', 'printer', 'defines', 'start', 'skeleton', 'glr-parser', 'language',
-    'parse-param', 'lex-param', 'pure-parser', 'expect', 'expect-rr', 'name-prefix', 'locations', 'nonassoc'];
+    'parse-param', 'lex-param', 'pure-parser', 'expect', 'expect-rr', 'name-prefix', 'locations', 'nonassoc', 'debug',
+    'file-prefix', 'header', 'no-lines', 'require', 'verbose', 'yacc'];
 
 export function doYACCComplete(document: TextDocument, position: Position, yaccDocument: YACCDocument): CompletionItem[] | CompletionList {
     const offset = document.offsetAt(position);
