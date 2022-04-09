@@ -111,7 +111,7 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|token-table|token(?=(\\s|<))|expect-rr|expect|nonassoc(?=\\s)|left(?=\\s)|right(?=\\s)|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser)",
+			"begin": "^%(option|token-table|token(?=(\\s|<))|expect-rr|expect|nonassoc(?=\\s)|left(?=\\s)|right(?=\\s)|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser|debug|file-prefix|header|no-lines|require|verbose|yacc)",
 			"end": "(?=%)",
 			"beginCaptures": {
 				"0": {
