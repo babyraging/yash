@@ -38,7 +38,8 @@
                     ".lxx",
                     ".lpp",
                     ".fl",
-                    ".lex"
+                    ".lex",
+                    ".flex"
                 ],
                 "configuration": "./lex-configuration.json"
             },
