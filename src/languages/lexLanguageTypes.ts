@@ -24,6 +24,7 @@ export enum TokenType {
     Unknown,
     Divider,
     Escape,
+    CharRange,
     EOL,
     EOS
 }

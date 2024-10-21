@@ -66,5 +66,5 @@ export function runSafe<T>(func: () => T, errorVal: T, errorMessage: string, tok
 
 function cancelValue<E>() {
     console.log("Request cancelled...");
-    return undefined;
+    return undefined as unknown as E;
 }
