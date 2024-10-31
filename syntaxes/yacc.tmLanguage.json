@@ -354,6 +354,9 @@
 		"embedded": {
 			"patterns": [
 				{
+					"include": "source.java"
+				},
+				{
 					"include": "source.cpp"
 				},
 				{
