@@ -1,5 +1,5 @@
 import { createScanner } from "./lexScanner";
-import { TokenType } from "../lexLanguageTypes";
+import { ScannerState, TokenType } from "../lexLanguageTypes";
 import { binarySearch } from "./utils";
 import { Problem, ProblemType, ProblemRelated } from "../common";
 
@@ -114,9 +114,10 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
     let codeOffset = 0;
     let tokenText = '';
     let acceptingStates = false;
-    let lastToken = token;
     let isConditionScope = false;
+    let lastToken = TokenType.Invalid;
     while (end < 0 && token !== TokenType.EOS) {
+        //console.log('parse(type='+TokenType[token]+',token='+scanner.getTokenText()+',state='+ParserState[state]+')');
         offset = scanner.getTokenOffset();
         switch (token) {
             case TokenType.StartCode:
@@ -203,6 +204,7 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
             case ParserState.WaitingRule:
                 switch (token) {
                     case TokenType.Literal:
+                    case TokenType.CharRange:
                     case TokenType.Word:
                         break;
                     case TokenType.Predefined:
@@ -293,6 +295,19 @@ export function parse(text: string, state: ParserState = ParserState.WaitingDecl
                             length: scanner.getTokenEnd() - codeOffset,
                             end: scanner.getTokenEnd()
                         });
+                        break;
+                    case TokenType.Action:
+                        tokenText = scanner.getTokenText();
+                        if (/^[a-zA-Z]\w*$/.test(tokenText))
+                            document.components.push({
+                                name: tokenText,
+                                offset: offset,
+                                length: scanner.getTokenLength(),
+                                end: scanner.getTokenEnd(),
+                                used: true,
+                                definition: [-1, -1],
+                                references: [[offset, scanner.getTokenEnd()]]
+                            });
                         break;
                 }
                 break;
