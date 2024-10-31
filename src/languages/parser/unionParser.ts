@@ -1,7 +1,9 @@
 import {
     MultiLineStream, _FSL, _AST, _NWL, _BAR, _COL, _BOP, _BCL, _DOT, _PCS, _LAN, _DQO, _SQO, _RAN, _SBO, _SCL, _AND
 } from './utils'
-
+import { 
+	workspace, 
+	} from 'vscode';
 export enum ScannerState {
     WithinContent,
     WithinDefinition,
@@ -187,7 +189,7 @@ export interface YYType {
 export function parse(text: string): YYType[] {
     const scanner = createScanner(text);
     const types: YYType[] = [];
-
+    let TargetLanguage = workspace.getConfiguration("yash").get("TargetLanguage");
 
     let token = scanner.scan();
     let offset = 0;
@@ -197,7 +199,14 @@ export function parse(text: string): YYType[] {
         switch (token) {
             case TokenType.SemiColon:
                 if (type !== undefined) {
-                    type.name = type.type.pop();
+                    if (TargetLanguage=="go")
+                    {
+                        type.name = type.type.shift();
+                    }
+                    else
+                    {
+                        type.name = type.type.pop();
+                    }
                     type.location[1] = scanner.getTokenEnd();
                     type.info = unIndent(text.substring(type.location[0], type.location[1]));
                     types.push(type);
@@ -207,6 +216,14 @@ export function parse(text: string): YYType[] {
             case TokenType.Word:
                 if (type !== undefined) {
                     type.type.push(scanner.getTokenText());
+                    if (TargetLanguage=="go" && type.type.length==2)
+                    {
+                        type.name = type.type.shift();
+                        type.location[1] = scanner.getTokenEnd();
+                        type.info = unIndent(text.substring(type.location[0], type.location[1]));
+                        types.push(type);
+                        type = undefined;
+                    }
                 } else {
                     type = { type: [scanner.getTokenText()], info: '', location: [offset, -1] }
                 }
