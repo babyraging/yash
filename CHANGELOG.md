@@ -4,6 +4,16 @@
 
 ## Release
 
+## 0.3.0 12/11/2024
+
+### Bug fixes
+- Various fixes to better support doxygen's lexer files PR #36 (Thanks @doxygen)
+
+### Changed
+- Add more keywords for yacc PR #22 (Thanks @jkimblad)
+- Add .flex extension for lex files PR #25 (Thanks @kwinz)
+- Add basic Java syntax highlight for lex/yacc files PR #17 (Thanks @FnControlOption)
+
 ## 0.2.9 27/03/2022
 
 ### Bug fixes
