@@ -1,5 +1,5 @@
 import { TokenType, ScannerState, Scanner } from '../lexLanguageTypes'
-import { MultiLineStream, _FSL, _AST, _NWL, _PCS, _BOP, _LAN, _BAR, _WSP, _DQO, _SQO, _BCL, _RAN, _BSL } from './utils';
+import { MultiLineStream, _FSL, _AST, _NWL, _PCS, _BOP, _LAN, _BAR, _WSP, _DQO, _SQO, _BCL, _RAN, _BSL, _SBO } from './utils';
 
 export function createScanner(input: string, initialOffset = 0, initialState: ScannerState = ScannerState.WithinContent): Scanner {
     const stream = new MultiLineStream(input, initialOffset);
@@ -15,6 +15,10 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
 
     function nextLiteral(): string {
         return stream.advanceIfRegExp(/^("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')/);
+    }
+
+    function nextCharacterRange(): string {
+        return stream.advanceIfRegExp(/^((?<!\\\\)\[(.*?)(?<!\\\\)\])/);
     }
 
     function finishToken(offset: number, type: TokenType, errorMessage?: string): TokenType {
@@ -41,6 +45,8 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
             stream.advance(1);
             return finishToken(offset, TokenType.Unknown);
         }
+        //console.log('scan('+stream.getSource().substring(tokenOffset, stream.pos())+
+        //            ',state='+ScannerState[state]+',oldState='+ScannerState[oldState]+')');
         return token;
     }
 
@@ -62,7 +68,19 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
         }
 
         if (white) {
-            return finishToken(offset, TokenType.Divider);
+            // only allow comments to start after white space at the start of a line
+            if (stream.peekChar(0)==_FSL && (stream.peekChar(1)==_AST || stream.peekChar(1)==_FSL)) {
+                if (stream.peekChar(1)==_AST) { // /*
+                    state = ScannerState.WithinComment;
+                    return finishToken(offset, TokenType.StartComment);
+                } else { // //
+                    stream.advanceUntilChar(_NWL);
+                    stream.advance(1);
+                    return finishToken(offset, TokenType.Comment);
+                }
+            } else {
+                return finishToken(offset, TokenType.Divider);
+            }
         }
 
         switch (state) {
@@ -105,6 +123,9 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                     case _BOP: // {
                         state = ScannerState.WithinAction;
                         return finishToken(offset, TokenType.StartAction);
+                    case _BCL: // }
+                        state = ScannerState.WithinContent;
+                        break;
                     case _WSP: // ' '
                         stream.advanceUntilChar(_NWL);
                         return finishToken(offset, TokenType.Invalid);
@@ -122,6 +143,14 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                     case _BSL: // \
                         stream.advance(1); // include the next escaped character
                         return finishToken(offset, TokenType.Escape);
+                    case _SBO: // [
+                        stream.goBack(1);
+                        const charRange = nextCharacterRange()
+                        if (charRange.length > 0) {
+                            return finishToken(offset, TokenType.CharRange);
+                        }
+                        stream.advance(1);
+                        return finishToken(offset, TokenType.Unknown);
                 }
 
                 stream.goBack(1);
