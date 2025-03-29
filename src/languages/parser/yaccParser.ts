@@ -30,6 +30,7 @@ export interface ISymbol {
     references: [number, number][];
 
     alias?: ISymbol
+    value?: string
 };
 
 export interface INamedReference {
@@ -52,6 +53,7 @@ export interface YACCDocument {
     readonly namedReferences: { [name: string]: INamedReference };
     readonly rulesRange: [number, number];
     readonly problems: Problem[];
+    readonly defines : { [name: string]: ISymbol };
 
     getNodeByOffset(offset: number): Node | undefined;
     getEmbeddedNode(offset: number): Node | undefined;
@@ -63,6 +65,7 @@ export enum NodeType {
     Type,
     Precedence,
     Rule,
+    Define,
     Embedded
 };
 
@@ -103,6 +106,7 @@ export function parse(text: string): YACCDocument {
         namedReferences,
         rulesRange,
         problems,
+        defines: {},
 
         getNodeByOffset(offset: number): Node | undefined {
             return binarySearch(this.nodes, offset, (node, offset) => offset < node.offset ? 1 : (offset > node.end ? -1 : 0))
@@ -151,7 +155,7 @@ export function parse(text: string): YACCDocument {
         });
     }
 
-    function addSymbolToMap(symbols: { [name: string]: ISymbol }, terminal: boolean, offset: number, end: number, name: string, type: string): ISymbol | undefined {
+    function addSymbolToMap(symbols: { [name: string]: ISymbol }, terminal: boolean, offset: number, end: number, name: string, type: string, value?: string): ISymbol | undefined {
         const old = symbols[name];
         if (old) {
             addProblem(`Symbol was already declared/defined.`, offset, end, ProblemType.Error, {
@@ -170,7 +174,8 @@ export function parse(text: string): YACCDocument {
                 type: type,
                 used: false,
                 definition: [offset, end],
-                references: [[offset, end]]
+                references: [[offset, end]],
+                value: value
             };
             return symbols[name];
         }
@@ -219,6 +224,21 @@ export function parse(text: string): YACCDocument {
                         }
                         break;
                 }
+                break;
+            case TokenType.Definition:
+                // A definition line is of the form %define <key> [value]
+                const line = scanner.getTokenText().trim();
+                const match = line.match(/^\s*%define\s+(\S+)\s*(.*)/);
+                if (match) {
+                    const key = match[1].trim(); // The key is the first group
+                    const value = match[2].trim(); // The value is the second group
+
+                    // Add the key and value to the defines map
+                    addSymbolToMap(document.defines, true, offset, scanner.getTokenEnd(), key, value, value);
+                } else {
+                    addProblem(`Invalid %define line`, offset, scanner.getTokenEnd(), ProblemType.Error);
+                }
+                
                 break;
             case TokenType.Option:
                 // save the last node
@@ -269,7 +289,7 @@ export function parse(text: string): YACCDocument {
                 const t = document.types[type];
                 if (t) {
                     t.references.push([scanner.getTokenOffset(), scanner.getTokenEnd()]);
-                } else {
+                } else if (!document.defines['api.value.type'] || document.defines['api.value.type'].value !== 'variant') {
                     addProblem(`Type was not declared in the %union.`, scanner.getTokenOffset(), scanner.getTokenEnd(), ProblemType.Error);
                 }
                 break;

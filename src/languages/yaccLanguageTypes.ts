@@ -16,6 +16,7 @@ export enum TokenType {
     StartComment,
     EndComment,
     Comment,
+    Definition,
     StartAction,
     EndAction,
     Action,
