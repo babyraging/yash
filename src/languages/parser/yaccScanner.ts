@@ -18,7 +18,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
 
     function nextType(): string {
         // Allow C++ types like std::string, std::vector<int>, etc.
-        let typeName = stream.advanceIfRegExp(/^[a-zA-Z][\w.-:]*/);
+        let typeName = stream.advanceIfRegExp(/^[a-zA-Z][\w\*.-:]*/);
     
         stream.skipWhitespace?.();
     
