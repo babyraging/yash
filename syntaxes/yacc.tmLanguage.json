@@ -111,8 +111,8 @@
 			]
 		},
 		"keywords": {
-			"begin": "^%(option|token-table|token(?=(\\s|<))|expect-rr|expect|nonassoc(?=\\s)|left(?=\\s)|right(?=\\s)|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser|debug|file-prefix|header|no-lines|require|verbose|yacc)",
-			"end": "(?=%)",
+			"begin": "^\\s*%(option|token-table|token(?=(\\s|<))|expect-rr|expect|nonassoc(?=\\s)|left(?=\\s)|right(?=\\s)|defines|output|precedence|nterm|start|name-prefix|locations|skeleton|glr-parser|language|pure-parser|debug|file-prefix|header|no-lines|require|verbose|yacc)",
+			"end": "(?=$)",
 			"beginCaptures": {
 				"0": {
 					"name": "keyword.other.yacc"
@@ -143,8 +143,8 @@
 			]
 		},
 		"result-type": {
-			"begin": "^%type(?=(\\s|<))",
-			"end": "(?=%)",
+			"begin": "^\\s*%type(?=(\\s|<))",
+			"end": "(?=$)",
 			"beginCaptures": {
 				"0": {
 					"name": "keyword.other.yacc"
@@ -167,7 +167,7 @@
 			]
 		},
 		"define": {
-			"begin": "^%define",
+			"begin": "^\\s*%define",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -200,7 +200,7 @@
 			]
 		},
 		"keywords-block": {
-			"begin": "^%(destructor|union|code( (requires|provides|top|imports))?|printer|parse-param|lex-param)",
+			"begin": "^\\s*%(destructor|union|code( (requires|provides|top|imports))?|printer|parse-param|lex-param)",
 			"end": "$",
 			"beginCaptures": {
 				"0": {
@@ -233,7 +233,7 @@
 			"patterns": [
 				{
 					"name": "entity.prologue.yacc",
-					"begin": "%{",
+					"begin": "^\\s*%{",
 					"end": "%}",
 					"beginCaptures": {
 						"0": {
@@ -253,7 +253,7 @@
 				},
 				{
 					"name": "entity.prologue.yacc",
-					"begin": "%(top){",
+					"begin": "^\\s*%(top){",
 					"end": "}",
 					"beginCaptures": {
 						"0": {
@@ -314,7 +314,7 @@
 			"patterns": [
 				{
 					"name": "support.class.yacc",
-					"match": "^[a-zA-Z_]+[\\w\\.-]*(?=[\\s:\\[])"
+					"match": "^\\s*[a-zA-Z_]+[\\w\\.-]*(?=[\\s:\\[])"
 				}
 			]
 		},
