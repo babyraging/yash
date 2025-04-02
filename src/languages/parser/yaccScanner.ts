@@ -1,7 +1,7 @@
 import { TokenType, ScannerState, Scanner } from '../yaccLanguageTypes'
 
 import {
-    MultiLineStream, _FSL, _AST, _NWL, _BAR, _COL, _BOP, _BCL, _DOT, _PCS, _LAN, _DQO, _SQO, _RAN, _SBO, _SCL
+    MultiLineStream, _FSL, _AST, _NWL, _BAR, _COL, _BOP, _BCL, _DOT, _PCS, _LAN, _DQO, _SQO, _RAN, _SBO, _SCL, _COM
 } from './utils'
 
 export function createScanner(input: string, initialOffset = 0, initialState: ScannerState = ScannerState.WithinContent): Scanner {
@@ -15,6 +15,35 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
         // return stream.advanceIfRegExp(/^[a-zA-Z][\w.]*/);
         return stream.advanceIfRegExp(/^[a-zA-Z][\w.-]*/);  // gnu bison extension allows the dash symbol
     }
+
+    function nextType(): string {
+        // Allow C++ types like std::string, std::vector<int>, etc.
+        let typeName = stream.advanceIfRegExp(/^[a-zA-Z][\w\*.-:]*/);
+    
+        stream.skipWhitespace?.();
+    
+        if (stream.advanceIfChar(_LAN)) { // '<'
+            typeName += '<';
+            stream.skipWhitespace?.();
+            typeName += nextType();
+    
+            for (;;) {
+                stream.skipWhitespace?.();
+                if (!stream.advanceIfChar(_COM)) break;
+                typeName += ',';
+                stream.skipWhitespace?.();
+                typeName += nextType();
+            }
+    
+            stream.skipWhitespace?.();
+            if (stream.advanceIfChar(_RAN)) { // '>'
+                typeName += '>';
+            }
+        }
+    
+        return typeName;
+    }
+    
 
     function nextLiteral(): string {
         return stream.advanceIfRegExp(/^("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')/);
@@ -89,6 +118,11 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                         }
 
                         if (stream.advanceIfRegExp(/^[\w-]+/)) {
+                            if (stream.getSource().substring(offset, stream.pos()).toLowerCase() === '%define') {
+                                // We have a define; we return the ENTIRE line up to (but not including) the newline
+                                stream.advanceUntilChar(_NWL);
+                                return finishToken(offset, TokenType.Definition);
+                            }
                             return finishToken(offset, TokenType.Option);
                         }
                         return finishToken(offset, TokenType.Percent);
@@ -136,7 +170,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
                     return finishToken(offset, TokenType.EndType);
                 }
 
-                const typeValue = nextWord();
+                const typeValue = nextType();
                 if (typeValue.length > 0) {
                     return finishToken(offset, TokenType.TypeValue);
                 }
