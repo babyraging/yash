@@ -95,6 +95,15 @@
                     "type": "string",
                     "default": "",
                     "markdownDescription": "Set the default YYSTYPE. For example `void*`. Setting this field will disable error message on implicitly typed non-terminal symbols."
+                },
+                "yash.TargetLanguage": {
+                    "type": "string",
+                    "enum": [
+						"c",
+						"go"
+					],
+                    "default": "c",
+                    "markdownDescription": "Set the default TargetLanguage. set `c` the `union` will parser with c language style and set `go` the `union` will parser with go language style."
                 }
             }
         }
