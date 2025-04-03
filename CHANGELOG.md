@@ -4,6 +4,14 @@
 
 ## Release
 
+## 0.3.1 03/04/2025
+
+### Added
+- Added C++ variants support PR #37 (Thanks @RobertSundling)
+
+### Bug fixes
+- Indentations(white spaces) breaks syntax highlight PR #39 (Thanks @@Jeff-Rowell)
+
 ## 0.3.0 12/11/2024
 
 ### Bug fixes

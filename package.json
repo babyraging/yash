@@ -2,7 +2,7 @@
     "name": "yash",
     "displayName": "Yash",
     "description": "Yet another syntax highlighter for lex/yacc & flex/bison.",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "engines": {
         "vscode": "^1.44.0"
     },
